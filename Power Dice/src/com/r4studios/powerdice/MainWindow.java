@@ -14,6 +14,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -75,7 +76,9 @@ public class MainWindow extends JFrame implements ActionListener{
 	private static final String VERSION_NUMBER = "0.3.1";
 	private static final ImageIcon winIcon = new ImageIcon("Resources/icon.png");
 	private static final String[] powerDice = {"Skull Dice", "Chance Die", "All or Nothing Die", "+/- Dice", "Tripler Dice"};
+	private static final String[] ranks = {"1st", "2nd", "3rd", "4th"};
 	private Dice[] keptDice = new Dice[5];
+	private Dice[] tempDice = new Dice[5];
 	private Dice[] regularDice = new Dice[5];
 	private Dice[] skullDice = new Dice[2];
 	private Dice[] plusMinusDice = new Dice[2];
@@ -85,11 +88,14 @@ public class MainWindow extends JFrame implements ActionListener{
 	private Dice greenDie; 
 	private List<String> playerNames;
 	private List<Integer> playerScores = new List<Integer>();
+	private List<Integer> sortedPlayerScores = new List<Integer>();
 	private int curPlayerTurn;
 	private int curTurnScore = 0;
-	private boolean gameWon = false;
-	private boolean turnAlive = true;
+	private int tempScore = 0;
+	private int challengingPlayer;
 	private boolean newRoll = false;
+	private boolean rollAgain = false;
+	private boolean lastRound = false;
 	
 	public MainWindow(List<String> players){
 		try {
@@ -163,7 +169,7 @@ public class MainWindow extends JFrame implements ActionListener{
 				playerScores.Push(0);
 				lblPlayerScores[i] = new JLabel("<html><font size=4>Score: 0</font></html>");
 				lblPlayerNames[i] = new JLabel("<html><font size=6>" + this.playerNames.GetValueAt(i) + "</font></html>");
-				lblPlayerPosns[i] = new JLabel("<html><font size=6>1st</font></html>");
+				lblPlayerPosns[i] = new JLabel("<html><font size=6><b>1st<b></font></html>");
 			}else{
 				lblPlayerScores[i] = new JLabel();
 				lblPlayerNames[i] = new JLabel();
@@ -234,6 +240,9 @@ public class MainWindow extends JFrame implements ActionListener{
 		lblCurPowerDice[0] = new JLabel();
 		lblCurPowerDice[1] = new JLabel();
 		lblCurPowerDice[2] = new JLabel();
+		lblCurPowerDice[0].setIcon(new ImageIcon("Resources/blank.png"));
+		lblCurPowerDice[1].setIcon(new ImageIcon("Resources/blank.png"));
+		lblCurPowerDice[2].setIcon(new ImageIcon("Resources/blank.png"));
 		pnlRollPower.add(new JLabel());
 		for (int i = 0; i < 3; i++){
 			pnlPowerRollIcons[i] = new JPanel();
@@ -266,6 +275,7 @@ public class MainWindow extends JFrame implements ActionListener{
 			pnlRollDie[i] = new JPanel();
 			pnlRollDie[i].setLayout(new BorderLayout());
 			lblCurDice[i] = new JLabel();
+			lblCurDice[i].setIcon(new ImageIcon("Resources/blank.png"));
 			btnKeepDie[i] = new JButton("Keep");
 			btnKeepDie[i].addActionListener(this);
 			btnKeepDie[i].setEnabled(false);
@@ -322,72 +332,66 @@ public class MainWindow extends JFrame implements ActionListener{
 		curPlayerTurn = rollWin.winner;
 		newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
 	}
-	
+	// TODO fix ranking in ending turn
 	// Event Handling
 	public void actionPerformed(ActionEvent e) {
 		for (int i = 0; i < 5; i++){
 			if (e.getSource() == btnReturnDie[i]){
-				int value = keptDice[i].getLastRoll();
-				if (value == 1){
-					curTurnScore -= 100;
-				}else if (value == 5){
-					curTurnScore -= 50;
-				}
-				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + curTurnScore + "</font></html>");
 				regularDice[i] = keptDice[i];
 				keptDice[i] = null;
+				tempDice[i] = null;
 				lblKeptDice[i].setIcon(null);
 				lblCurDice[i].setIcon(new ImageIcon(regularDice[i].GetResultImage(regularDice[i].getLastRoll() - 1)));
 				btnReturnDie[i].setEnabled(false);
 				btnKeepDie[i].setEnabled(true);
-			}else if (e.getSource() == btnKeepDie[i]){
-				int value = regularDice[i].getLastRoll();
-				if (value == 1){
-					curTurnScore += 100;
-				}else if (value == 5){
-					curTurnScore += 50;
+				tempScore = CalcTempPoints();
+				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
+				if (btnReturnDie[0].isEnabled() == false && btnReturnDie[1].isEnabled() == false && btnReturnDie[2].isEnabled() == false && btnReturnDie[3].isEnabled() == false && btnReturnDie[4].isEnabled() == false){
+					btnBank.setEnabled(false);
 				}
-				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + curTurnScore + "</font></html>");
+			}else if (e.getSource() == btnKeepDie[i]){
+				btnBank.setEnabled(true);
 				keptDice[i] = regularDice[i];
+				tempDice[i] = keptDice[i];
 				regularDice[i] = null;
-				lblCurDice[i].setIcon(null);
+				lblCurDice[i].setIcon(new ImageIcon("Resources/blank.png"));
 				lblKeptDice[i].setIcon(new ImageIcon(keptDice[i].GetResultImage(keptDice[i].getLastRoll() - 1)));
 				btnKeepDie[i].setEnabled(false);
 				btnReturnDie[i].setEnabled(true);
+				tempScore = CalcTempPoints();
+				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
 				CheckReRoll();
 			}else if (e.getSource() == btnPickPowerDie[i]){
-				lblCurPowerDice[0].setIcon(null);
-				lblCurPowerDice[1].setIcon(null);
-				lblCurPowerDice[2].setIcon(null);
+				lblCurPowerDice[0].setIcon(new ImageIcon("Resources/blank.png"));
+				lblCurPowerDice[1].setIcon(new ImageIcon("Resources/blank.png"));
+				lblCurPowerDice[2].setIcon(new ImageIcon("Resources/blank.png"));
 				if (i == 0){
 					curTurnScore += RollSkull();
-				}else if (i == 1){ // TODO Add code to handle other dice rolls
-					curTurnScore += RollYellow();
+				}else if (i == 1){ 
+					RollYellow();
 				}else if (i == 2){
-					curTurnScore += RollAll();
+					RollAll();
 				}else if (i == 3){
 					curTurnScore += RollPlusMinus();
 				}else if (i == 4){
 					curTurnScore *= RollTripler();
 				}
-				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + curTurnScore + "</font></html>");
+				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
 				btnEndTurn.setEnabled(true);
 			}
 		}
 		
 		if (e.getSource() == btnRollDice){
-			btnBank.setEnabled(true);
-			int numValid = 0;
-			List<Integer> freqs = new List<Integer>(new Integer[]{0,0,0,0,0,0});
-			for (int i = 0; i < 5; i++){
+			curTurnScore += tempScore;
+			tempScore = 0;
+			for (int i = 0; i < 5; i++){  // Loop to roll remaining dice
+				tempDice[i] = null;
+				if (keptDice[i] != null){
+					btnReturnDie[i].setEnabled(false);
+				}
 				if (regularDice[i] != null){
-					freqs.SetValueAt(regularDice[i].getLastRoll() - 1, freqs.GetValueAt(regularDice[i].getLastRoll() - 1) + 1);
 					int roll = regularDice[i].Roll();
 					lblCurDice[i].setIcon(new ImageIcon(regularDice[i].sidePics[roll - 1]));
-					if (roll == 1 || roll == 5){
-						btnKeepDie[i].setEnabled(true);
-						numValid++;
-					}
 				}else if (newRoll){
 					regularDice[i] = keptDice[i];
 					keptDice[i] = null;
@@ -395,23 +399,16 @@ public class MainWindow extends JFrame implements ActionListener{
 					regularDice[i].Roll();
 					lblCurDice[i].setIcon(new ImageIcon(regularDice[i].GetResultImage(regularDice[i].getLastRoll() - 1)));
 					btnReturnDie[i].setEnabled(false);
-					if (regularDice[i].getLastRoll() == 1 || regularDice[i].getLastRoll() == 5){
-						btnKeepDie[i].setEnabled(true);
-						numValid++;
-					}
 				}
 			}
-			newRoll = false;
-			if (numValid == 0){
-				// TODO Change to Next turn (share function with btnEndTurn)
-			}
-			// Checking for other point sources
-			if (freqs.GetValueAt(0) == 1 && freqs.GetValueAt(1) == 1 && freqs.GetValueAt(2) == 1 && freqs.GetValueAt(3) == 1 && freqs.GetValueAt(4) == 1 || freqs.GetValueAt(1) == 1 && freqs.GetValueAt(2) == 1 && freqs.GetValueAt(3) == 1 && freqs.GetValueAt(4) == 1 && freqs.GetValueAt(5) == 1){
-				// TODO Code for a straight
-			}else if (freqs.FindMaxValue() >= 5){
-				// TODO Code for trips / quads / quints
-			}
+			CheckForPoints();  // Enables buttons which can be used
+			newRoll = false;			
 		}else if (e.getSource() == btnBank){
+			curTurnScore += tempScore;
+			tempScore = 0;
+			for (int i = 0; i < 5; i++){
+				btnReturnDie[i].setEnabled(false);
+			}
 			lblCurPowerDice[1].setIcon(new ImageIcon("Resources/power_die.png"));
 			btnRollPowerDice.setEnabled(true);
 			btnBank.setEnabled(false);
@@ -435,15 +432,79 @@ public class MainWindow extends JFrame implements ActionListener{
 					btnPickPowerDie[i].setEnabled(true);
 				}
 			}
-			btnPickPowerDie[4].setEnabled(true);
 		}else if (e.getSource() == btnEndTurn){
-			// TODO CHANGE TURN
+			EndPlayerTurn();
 		}else if (e.getSource() == quitItem){
 			this.dispose();
 		}else if (e.getSource() == aboutItem){
 			new AboutWindow(VERSION_NUMBER);
 		}else if (e.getSource() == newGameItem){
 			new EnterPlayersWindow();
+			this.dispose();
+		}
+	}
+	
+	private void EndPlayerTurn(){
+		playerScores.SetValueAt(curPlayerTurn, playerScores.GetValueAt(curPlayerTurn) + curTurnScore);
+		lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "</font></html>");
+		sortedPlayerScores = playerScores.QuickSort().Reverse();
+		for (int i = 0; i < playerScores.getSize(); i++){
+			System.out.println("Position " + i + ":" + playerNames.GetValueAt(playerScores.GetIndexOf(sortedPlayerScores.GetValueAt(i)))+ "(" + sortedPlayerScores.GetValueAt(i) + " Points)");
+		}
+		for (int i = 0; i < playerScores.getSize(); i++){
+			int index = playerScores.GetIndexOf(sortedPlayerScores.GetValueAt(i));
+			if (i == 0){
+				lblPlayerPosns[index].setText("<html><font size=6><b>" + ranks[i] + "</b></font></html>");
+			}else{
+				lblPlayerPosns[index].setText("<html><font size=6>" + ranks[i] + "</font></html>");
+			}
+		}
+		if (lastRound && (curPlayerTurn + 1) % 4 == challengingPlayer){  // If the last player's last round is finished
+			WonGame(playerNames.GetValueAt(playerScores.GetIndexOf(sortedPlayerScores.GetValueAt(0))), sortedPlayerScores.GetValueAt(0));
+		}else if (!lastRound){
+			if (playerScores.GetValueAt(curPlayerTurn) >= 20000){
+				challengingPlayer = curPlayerTurn;
+				lastRound = true;
+				JOptionPane.showMessageDialog(this, playerNames.GetValueAt(curPlayerTurn) + " has reached 20,000 points! The final round has begun!", "Final Round Starting!", JOptionPane.INFORMATION_MESSAGE);
+			}
+		}
+		curTurnScore = 0;
+		tempScore = 0;
+		if (rollAgain == false){  // Changes players if no roll again from yellow
+			curPlayerTurn = (curPlayerTurn + 1) % playerNames.getSize();
+			newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
+		}
+		for (int i = 0; i < 5; i++){
+			if (i < 3){
+				lblCurPowerDice[i].setIcon(new ImageIcon("Resources/blank.png"));
+			}
+			regularDice[i] = new Dice(6);
+			keptDice[i] = null;
+			tempDice[i] = null;
+			lblKeptDice[i].setIcon(null);
+			lblCurDice[i].setIcon(new ImageIcon("Resources/blank.png"));
+			btnRollDice.setEnabled(true);
+			btnEndTurn.setEnabled(false);
+			btnPickPowerDie[i].setEnabled(false);
+		}
+		rollAgain = false;
+	}
+	
+	private void WonGame(String name, int score){
+		Object[] options = {"Yes, with the same players", "Yes, but with different players", "No"};
+		int n;
+		if (score == -1){
+			n = JOptionPane.showOptionDialog(this, name + " won the game by rolling a 20 on the All or Nothing die! Would you like to play again?", name + " won!", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+		}else{
+			n = JOptionPane.showOptionDialog(this, name + " won the game with a score of " + score + "!  Would you like to play again?", name + " won!", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+		}
+		if (n == JOptionPane.YES_OPTION){
+			this.dispose();
+			new MainWindow(playerNames);
+		}else if (n == JOptionPane.NO_OPTION){
+			this.dispose();
+			new EnterPlayersWindow();
+		}else{
 			this.dispose();
 		}
 	}
@@ -463,22 +524,130 @@ public class MainWindow extends JFrame implements ActionListener{
 		}
 	}
 	
-	// Returns change in pts or event code (-1,-2,-3)
-	private int RollYellow(){
+	private int CalcTempPoints(){
+		int points = 0;
+		List<Integer> freqs = new List<Integer>(new Integer[]{0,0,0,0,0,0});
+		for (int i = 0; i < 5; i++){
+			if (tempDice[i] != null){
+				freqs.SetValueAt(tempDice[i].getLastRoll() - 1, freqs.GetValueAt(tempDice[i].getLastRoll() - 1) + 1);
+			}
+		}
+		// Straight or quints
+		if (freqs.GetValueAt(0) == 1 && freqs.GetValueAt(1) == 1 && freqs.GetValueAt(2) == 1 && freqs.GetValueAt(3) == 1 && freqs.GetValueAt(4) == 1 || freqs.GetValueAt(1) == 1 && freqs.GetValueAt(2) == 1 && freqs.GetValueAt(3) == 1 && freqs.GetValueAt(4) == 1 && freqs.GetValueAt(5) == 1){
+			points += 1000;
+		}else if (freqs.FindMaxValue() == 5){
+			if (freqs.FindMaxIndex() == 0){
+				points += 4000;
+			}else{
+				points += 400 * (freqs.FindMaxIndex() + 1);
+			}
+		}else if (freqs.FindMaxValue() > 2){  // Trips or quads
+			for (int i = 0; i < 5; i++){
+				if (tempDice[i] != null){
+					if (tempDice[i].getLastRoll() != freqs.FindMaxIndex() + 1){
+						if (tempDice[i].getLastRoll() == 1){
+							points += 100;
+						}else if (tempDice[i].getLastRoll() == 5){
+							points += 50;
+						}
+					}
+				}
+			}
+			if (freqs.FindMaxIndex() == 0){
+				points += (1000 * (freqs.FindMaxValue() - 2));
+			}else{
+				points += (100 * (freqs.FindMaxValue() - 2) * (freqs.FindMaxIndex() + 1));
+			}
+		}else{
+			for (int i = 0; i < 5; i++){
+				if (tempDice[i] != null){
+					if (tempDice[i].getLastRoll() == 1){
+						points += 100;
+					}else if (tempDice[i].getLastRoll() == 5){
+						points += 50;
+					}
+				}
+			}
+		}
+		return points;
+	}
+	
+	// Checks what combinations of points there are, and what buttons can be enabled
+	private void CheckForPoints(){
+		boolean[] btnEnabled = new boolean[5];
+		List<Integer> freqs = new List<Integer>(new Integer[]{0,0,0,0,0,0});
+		for (int i = 0; i < 5; i++){
+			if (regularDice[i] != null){
+				freqs.SetValueAt(regularDice[i].getLastRoll() - 1, freqs.GetValueAt(regularDice[i].getLastRoll() - 1) + 1);
+			}
+		}
+		// Straight or quints
+		if (freqs.FindMaxValue() == 5 || freqs.GetValueAt(0) == 1 && freqs.GetValueAt(1) == 1 && freqs.GetValueAt(2) == 1 && freqs.GetValueAt(3) == 1 && freqs.GetValueAt(4) == 1 || freqs.GetValueAt(1) == 1 && freqs.GetValueAt(2) == 1 && freqs.GetValueAt(3) == 1 && freqs.GetValueAt(4) == 1 && freqs.GetValueAt(5) == 1){
+			btnEnabled = new boolean[]{true, true, true, true, true};
+		}else if (freqs.FindMaxValue() > 2){  // Trips or quads
+			for (int i = 0; i < 5; i++){
+				if (regularDice[i] != null){
+					if (regularDice[i].getLastRoll() == freqs.FindMaxIndex() + 1){
+						btnEnabled[i] = true;
+					}else if (regularDice[i].getLastRoll() == 1 || regularDice[i].getLastRoll() == 5){
+						btnEnabled[i] = true;
+					}else{
+						btnEnabled[i] = false;
+					}
+				}else{
+					btnEnabled[i] = false;
+				}
+			}
+		}else{
+			for (int i = 0; i < 5; i++){
+				if (regularDice[i] != null){
+					btnEnabled[i] = (regularDice[i].getLastRoll() == 1 || regularDice[i].getLastRoll() == 5);
+				}else{
+					btnEnabled[i] = false;
+				}
+			}
+		}
+		SetDiceButtons(btnEnabled);
+		if (!btnEnabled[0] && !btnEnabled[1] && !btnEnabled[2] && !btnEnabled[3] && !btnEnabled[4]){
+			JOptionPane.showMessageDialog(this, "There are no points to keep!", "No Points on Roll", JOptionPane.INFORMATION_MESSAGE);
+			newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
+			tempScore = 0;
+			curTurnScore = 0;
+			btnRollDice.setEnabled(false);
+			btnBank.setEnabled(false);
+			btnEndTurn.setEnabled(true);
+		}
+	}
+	
+	private void SetDiceButtons(boolean[] enabled){
+		for (int i = 0; i < 5; i++){
+			btnKeepDie[i].setEnabled(enabled[i]);
+		}
+	}
+	
+	// Returns change in pts or1 event code (-1,-2,-3)
+	private void RollYellow(){
 		int result = yellowDie.Roll();
 		lblCurPowerDice[1].setIcon(new ImageIcon(yellowDie.GetResultImage(result - 1)));
 		if (result == 1){
-			return 500;
+			curTurnScore += 500;
 		}else if (result == 2){
-			return 2000;
+			curTurnScore += 2000;
 		}else if (result == 3){
-			return -1000;
+			curTurnScore += -1000;
 		}else if (result == 4){ // Lost turn
-			return -1; // TODO Patch up this functionality for notification
+			curTurnScore = 0; 
 		}else if (result == 5){ // Trade Pts
-			return -2;
+			TradePtsWindow tradeWin = new TradePtsWindow(curPlayerTurn, playerNames, playerScores);
+			int tempPts = playerScores.GetValueAt(tradeWin.choice);
+			playerScores.SetValueAt(tradeWin.choice, playerScores.GetValueAt(curPlayerTurn));
+			playerScores.SetValueAt(curPlayerTurn, tempPts);
+			lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "</font></html>");
+			lblPlayerScores[tradeWin.choice].setText("<html><font size=4>Score: " + playerScores.GetValueAt(tradeWin.choice) + "</font></html>");
+			curTurnScore = 0;
+			tempScore = 0;
 		}else{ // Roll again
-			return -3;
+			rollAgain = true;
 		}
 	}
 	
@@ -499,16 +668,13 @@ public class MainWindow extends JFrame implements ActionListener{
 		}
 	}
 	
-	// Returns 1 if they win, 0 if they lose pts, and -1 for nothing
-	private int RollAll(){
+	private void RollAll(){
 		int result = greenDie.Roll();
 		lblCurPowerDice[1].setIcon(new ImageIcon(greenDie.GetResultImage(result - 1)));
 		if (result == 1){  // Lost all points
-			return 0;
+			curTurnScore = 0;
 		}else if (result == 20){  // Won game
-			return 1;
-		}else{  // Nothing happens
-			return -1;
+			WonGame(playerNames.GetValueAt(curPlayerTurn), -1);
 		}
 	}
 	
@@ -533,7 +699,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		int res2 = plusMinusDice[1].Roll();
 		lblCurPowerDice[0].setIcon(new ImageIcon(plusMinusDice[0].GetResultImage(res1 - 1)));
 		lblCurPowerDice[2].setIcon(new ImageIcon(plusMinusDice[1].GetResultImage(res2 - 1)));
-		if (res1 == 0){
+		if (res1 == 2){
 			return -100 * res2;
 		}else{
 			return 100 * res2;

@@ -321,7 +321,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		this.pack();
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setIconImage(winIcon.getImage());
-		this.setSize(710,750);
+		this.setSize(710,760);
 		this.setTitle("Power Dice v" + VERSION_NUMBER);
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
@@ -348,6 +348,7 @@ public class MainWindow extends JFrame implements ActionListener{
 					btnRollDice.setEnabled(false);
 					btnBank.setEnabled(false);
 				}
+				break;
 			}else if (e.getSource() == btnKeepDie[i]){
 				btnRollDice.setEnabled(true);
 				keptDice[i] = regularDice[i];
@@ -363,7 +364,11 @@ public class MainWindow extends JFrame implements ActionListener{
 				}
 				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
 				CheckReRoll();
+				break;
 			}else if (e.getSource() == btnPickPowerDie[i]){
+				for (int j = 0; j < 5; j++){
+					btnPickPowerDie[j].setEnabled(false);
+				}
 				lblCurPowerDice[0].setIcon(new ImageIcon("Resources/blank.png"));
 				lblCurPowerDice[1].setIcon(new ImageIcon("Resources/blank.png"));
 				lblCurPowerDice[2].setIcon(new ImageIcon("Resources/blank.png"));
@@ -380,6 +385,7 @@ public class MainWindow extends JFrame implements ActionListener{
 				}
 				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
 				btnEndTurn.setEnabled(true);
+				break;
 			}
 		}
 		
@@ -484,7 +490,6 @@ public class MainWindow extends JFrame implements ActionListener{
 			lblCurDice[i].setIcon(new ImageIcon("Resources/blank.png"));
 			btnRollDice.setEnabled(true);
 			btnEndTurn.setEnabled(false);
-			btnPickPowerDie[i].setEnabled(false);
 		}
 		rollAgain = false;
 	}

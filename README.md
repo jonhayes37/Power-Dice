@@ -1,6 +1,11 @@
-# Power Dice v0.8.1
+# Power Dice v0.9.1
 
-Power Dice is a fun and exciting variant on the traditional dice game Dice 10000, and is meant for 2-4 players.  Players in Power Dice race 
+#### What's new in 0.9.1:
+* Numerous UI improvements
+* In-game help via the menu bar directs players to this document
+* Slight improvements to the About window
+
+Power Dice is a fun and exciting variant on the traditional dice game [Dice 10000](http://en.wikipedia.org/wiki/Dice_10000), and is meant for 2-4 players.  Players in Power Dice race 
 to **20,000 Points**. Once a player eclipses the 20,000-point mark, each other player has one final chance to push their point 
 total higher than their opponents.  After the final round, **the player with the most points wins**.
 
@@ -8,18 +13,18 @@ Power Dice features a new set of dice that add a number of exciting mechanics to
 turn, players rolls the Power Die and begin their Power Round, where they use the set of dice that they rolled on the 
 Power Die to score bonus points.  The two stages to a turn are explained below
 
-## The Rolling Phase
+## The Standard Round
 
 In the rolling phase, players roll five regular 6-sided dice in an attempt to earn points.  After each roll, a player can
 choose to keep any valid point-earning dice rolled.  If at least one die is kept, the player can choose to roll again, or 
 bank their points and enter the Power Round. If all five dice are kept, the player rolls all five dice again, continuing their
 point total. Points can be earned as follows:
-* A 5 is worth 50 points
-* A 1 is worth 100 points
-* Triples are worth 100x the value of the side with triples (Triple 1's give 1,000 points)
-* Quadruples are worth 2x their corresponding triples value
-* Quintuples are worth 4x their corresponding triples value
-* A straight (1,2,3,4,5 or 2,3,4,5,6) is worth 1,000 points
+* A 5 is worth **50 points**
+* A 1 is worth **100 points**
+* Triples are worth **100x** the value of the side with triples (Triple 1's give 1,000 points)
+* Quadruples are worth **2x** their corresponding triples value
+* Quintuples are worth **4x** their corresponding triples value
+* A straight (1,2,3,4,5 or 2,3,4,5,6) is worth **1,000 points**
 
 **NOTE:** Points are only calculated for each roll, so triples, quadruples, quintuples, and straights must be kept in *one roll*.
 (eg. Rolling two 5's, then another 5 on the following roll is worth 150 points, not 500)
@@ -104,5 +109,4 @@ from the player's score total.
 
 ![](/Power Dice/Resources/power_6.png)
 
-The safest bet among the power dice, the tripler can only improve a player's turn's score total.  The player rolls 3 red dice,
-and if they roll doubles or triples, **their turn score is likewise doubled or tripled**.
+The safest bet among the power dice, the tripler can only improve a player's turn's score total.  The player rolls 3 red  6-sided dice, and if they roll doubles or triples, **their turn score is likewise doubled or tripled**.

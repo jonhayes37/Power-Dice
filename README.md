@@ -110,3 +110,9 @@ from the player's score total.
 ![](/Power Dice/Resources/power_6.png)
 
 The safest bet among the power dice, the tripler can only improve a player's turn's score total.  The player rolls 3 red  6-sided dice, and if they roll doubles or triples, **their turn score is likewise doubled or tripled**.
+
+#### Minimum System Requirements
+* 1 MB Hard Drive Space
+* 128 MB RAM
+* Intel Core 2 Duo E4300 @ 1.80 GHz
+* Java Version 7 or later

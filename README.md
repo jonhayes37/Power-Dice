@@ -1,9 +1,9 @@
-# Power Dice v0.9.1
+# Power Dice v0.9.2
 
-#### What's new in 0.9.1:
-* Numerous UI improvements
-* In-game help via the menu bar directs players to this document
-* Slight improvements to the About window
+#### What's new in 0.9.2:
+* A new High Score system is in place, accessible through the Help Menu 
+* The Hall of Fame showcases the top 10 scores
+* Fixed a bug where the final round was not ending properly with less than 4 players
 
 Power Dice is a fun and exciting variant on the traditional dice game [Dice 10000](http://en.wikipedia.org/wiki/Dice_10000), and is meant for 2-4 players.  Players in Power Dice race 
 to **20,000 Points**. Once a player eclipses the 20,000-point mark, each other player has one final chance to push their point 

@@ -1,6 +1,6 @@
 # Power Dice v0.8.1
 
-Power Dice is a fun and exciting variant on the traditional dice game Dice 10000, meant for 2-4 players.  Players in Power Dice race 
+Power Dice is a fun and exciting variant on the traditional dice game Dice 10000, and is meant for 2-4 players.  Players in Power Dice race 
 to **20,000 Points**. Once a player eclipses the 20,000-point mark, each other player has one final chance to push their point 
 total higher than their opponents.  After the final round, **the player with the most points wins**.
 

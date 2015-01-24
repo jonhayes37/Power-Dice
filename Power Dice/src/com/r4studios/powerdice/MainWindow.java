@@ -672,6 +672,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		lblCurPowerDice[1].setIcon(new ImageIcon(greenDie.GetResultImage(result - 1)));
 		if (result == 1){  // Lost all points
 			curTurnScore = 0;
+			playerScores.SetValueAt(curPlayerTurn, 0);
 		}else if (result == 20){  // Won game
 			WonGame(playerNames.GetValueAt(curPlayerTurn), -1);
 		}

@@ -2,9 +2,13 @@ package com.r4studios.powerdice;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -22,7 +26,7 @@ import javax.swing.border.TitledBorder;
 
 import com.r4studios.DataStructures.List;
 import com.r4studios.powerdice.Dice;
-
+// TODO Add high score / hall of fame
 public class MainWindow extends JFrame implements ActionListener{
 
 	private static final long serialVersionUID = -4703822372966597157L;
@@ -50,7 +54,6 @@ public class MainWindow extends JFrame implements ActionListener{
 	private JPanel[] pnlKeepIcons = new JPanel[5];
 	private JPanel[] pnlPowerRollIcons = new JPanel[3];
 	private JLabel[] lblPlayerNames = new JLabel[4];
-	private JLabel[] lblPlayerPosns = new JLabel[4];
 	private JLabel[] lblPlayerScores = new JLabel[4];
 	private JLabel[] lblKeptDice = new JLabel[5];
 	private JLabel[] lblCurDice = new JLabel[5];
@@ -68,15 +71,13 @@ public class MainWindow extends JFrame implements ActionListener{
 	private JMenu fileMenu;
 	private JMenu helpMenu;
 	private JMenuItem newGameItem;
-	private JMenuItem saveGameItem;
 	private JMenuItem quitItem;
 	private JMenuItem helpItem;
 	private JMenuItem hallOfFameItem;
 	private JMenuItem aboutItem;
-	private static final String VERSION_NUMBER = "0.3.1";
+	private static final String VERSION_NUMBER = "0.9.1";
 	private static final ImageIcon winIcon = new ImageIcon("Resources/icon.png");
 	private static final String[] powerDice = {"Skull Dice", "Chance Die", "All or Nothing Die", "+/- Dice", "Tripler Dice"};
-	private static final String[] ranks = {"1st", "2nd", "3rd", "4th"};
 	private Dice[] keptDice = new Dice[5];
 	private Dice[] tempDice = new Dice[5];
 	private Dice[] regularDice = new Dice[5];
@@ -108,12 +109,9 @@ public class MainWindow extends JFrame implements ActionListener{
 		fileMenu = new JMenu("File");
 		newGameItem = new JMenuItem("New Game");
 		newGameItem.addActionListener(this);
-		saveGameItem = new JMenuItem("Save Current Game");
-		saveGameItem.addActionListener(this);
 		quitItem = new JMenuItem("Quit");
 		quitItem.addActionListener(this);
 		fileMenu.add(newGameItem);
-		fileMenu.add(saveGameItem);
 		fileMenu.add(quitItem);
 		menuBar.add(fileMenu);
 		helpMenu = new JMenu("Help");
@@ -159,7 +157,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		// Score Area
 		pnlScoreArea = new JPanel();
 		pnlScoreArea.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-		pnlScoreArea.setLayout(new GridLayout(1,4,50 - 5 * playerNames.getSize(),0));
+		pnlScoreArea.setLayout(new GridLayout(1,4,100,0));// - 5 * playerNames.getSize(),0));
 		for (int i = 0; i < 4; i++){
 			pnlPlayers[i] = new JPanel();
 			pnlPlayers[i].setLayout(new GridLayout(2,1,0,0));
@@ -169,13 +167,10 @@ public class MainWindow extends JFrame implements ActionListener{
 				playerScores.Push(0);
 				lblPlayerScores[i] = new JLabel("<html><font size=4>Score: 0</font></html>");
 				lblPlayerNames[i] = new JLabel("<html><font size=6>" + this.playerNames.GetValueAt(i) + "</font></html>");
-				lblPlayerPosns[i] = new JLabel("<html><font size=6><b>1st<b></font></html>");
 			}else{
 				lblPlayerScores[i] = new JLabel();
 				lblPlayerNames[i] = new JLabel();
-				lblPlayerPosns[i] = new JLabel();
 			}
-			pnlPlrNames[i].add(lblPlayerPosns[i], BorderLayout.EAST);
 			pnlPlrNames[i].add(lblPlayerNames[i], BorderLayout.WEST);
 			pnlPlayers[i].add(pnlPlrNames[i]);
 			pnlPlayers[i].add(lblPlayerScores[i]);
@@ -192,6 +187,7 @@ public class MainWindow extends JFrame implements ActionListener{
 			pnlKeepDie[i] = new JPanel();
 			pnlKeepDie[i].setLayout(new BorderLayout());
 			lblKeptDice[i] = new JLabel();
+			lblKeptDice[i].setIcon(new ImageIcon("Resources/blank.png"));
 			pnlKeepIcons[i].add(lblKeptDice[i]);
 			btnReturnDie[i] = new JButton("Return Die");
 			btnReturnDie[i].setEnabled(false);
@@ -235,6 +231,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		// Power Dice Roll Panel
 		pnlPowerRoll = new JPanel();
 		pnlPowerRoll.setLayout(new BorderLayout());
+		pnlPowerRoll.setBorder(BorderFactory.createEmptyBorder(70,0,0,0));
 		pnlRollPower = new JPanel();
 		pnlRollPower.setLayout(new GridLayout(1,5,5,0));
 		lblCurPowerDice[0] = new JLabel();
@@ -260,7 +257,8 @@ public class MainWindow extends JFrame implements ActionListener{
 		btnRollPowerDice.setEnabled(false);
 		pnlRollPowerBtn.add(btnRollPowerDice);
 		pnlRollPowerBtn.add(btnEndTurn);
-		pnlPowerRoll.add(pnlRollPower);
+		pnlPowerRoll.add(new JPanel(), BorderLayout.NORTH);
+		pnlPowerRoll.add(pnlRollPower, BorderLayout.CENTER);
 		pnlPowerRoll.add(pnlRollPowerBtn, BorderLayout.SOUTH);
 		
 		// Main Roll Panel and News Label
@@ -323,7 +321,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		this.pack();
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setIconImage(winIcon.getImage());
-		this.setSize(700,800);
+		this.setSize(700,750);
 		this.setTitle("Power Dice v" + VERSION_NUMBER);
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
@@ -332,7 +330,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		curPlayerTurn = rollWin.winner;
 		newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
 	}
-	// TODO fix ranking in ending turn
+	
 	// Event Handling
 	public void actionPerformed(ActionEvent e) {
 		for (int i = 0; i < 5; i++){
@@ -340,17 +338,18 @@ public class MainWindow extends JFrame implements ActionListener{
 				regularDice[i] = keptDice[i];
 				keptDice[i] = null;
 				tempDice[i] = null;
-				lblKeptDice[i].setIcon(null);
+				lblKeptDice[i].setIcon(new ImageIcon("Resources/blank.png"));
 				lblCurDice[i].setIcon(new ImageIcon(regularDice[i].GetResultImage(regularDice[i].getLastRoll() - 1)));
 				btnReturnDie[i].setEnabled(false);
 				btnKeepDie[i].setEnabled(true);
 				tempScore = CalcTempPoints();
 				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
 				if (btnReturnDie[0].isEnabled() == false && btnReturnDie[1].isEnabled() == false && btnReturnDie[2].isEnabled() == false && btnReturnDie[3].isEnabled() == false && btnReturnDie[4].isEnabled() == false){
+					btnRollDice.setEnabled(false);
 					btnBank.setEnabled(false);
 				}
 			}else if (e.getSource() == btnKeepDie[i]){
-				btnBank.setEnabled(true);
+				btnRollDice.setEnabled(true);
 				keptDice[i] = regularDice[i];
 				tempDice[i] = keptDice[i];
 				regularDice[i] = null;
@@ -359,6 +358,9 @@ public class MainWindow extends JFrame implements ActionListener{
 				btnKeepDie[i].setEnabled(false);
 				btnReturnDie[i].setEnabled(true);
 				tempScore = CalcTempPoints();
+				if (tempScore > 0){
+					btnBank.setEnabled(true);
+				}
 				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
 				CheckReRoll();
 			}else if (e.getSource() == btnPickPowerDie[i]){
@@ -382,6 +384,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		}
 		
 		if (e.getSource() == btnRollDice){
+			btnRollDice.setEnabled(false);
 			curTurnScore += tempScore;
 			tempScore = 0;
 			for (int i = 0; i < 5; i++){  // Loop to roll remaining dice
@@ -441,6 +444,13 @@ public class MainWindow extends JFrame implements ActionListener{
 		}else if (e.getSource() == newGameItem){
 			new EnterPlayersWindow();
 			this.dispose();
+		}else if (e.getSource() == helpItem){
+			int n = JOptionPane.showConfirmDialog(this, "This will open the Power Dice ReadMe file in your default browser.  Do you wish to proceed?", "Opening in Default Browser", JOptionPane.YES_NO_OPTION);
+			if (n == JOptionPane.YES_OPTION){
+				try {
+					OpenWebsite(new URI("https://github.com/jonhayes37/Power-Dice/blob/master/README.md"));
+				}catch (URISyntaxException e1) {e1.printStackTrace();}
+			}
 		}
 	}
 	
@@ -448,17 +458,6 @@ public class MainWindow extends JFrame implements ActionListener{
 		playerScores.SetValueAt(curPlayerTurn, playerScores.GetValueAt(curPlayerTurn) + curTurnScore);
 		lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "</font></html>");
 		sortedPlayerScores = playerScores.QuickSort().Reverse();
-		for (int i = 0; i < playerScores.getSize(); i++){
-			System.out.println("Position " + i + ":" + playerNames.GetValueAt(playerScores.GetIndexOf(sortedPlayerScores.GetValueAt(i)))+ "(" + sortedPlayerScores.GetValueAt(i) + " Points)");
-		}
-		for (int i = 0; i < playerScores.getSize(); i++){
-			int index = playerScores.GetIndexOf(sortedPlayerScores.GetValueAt(i));
-			if (i == 0){
-				lblPlayerPosns[index].setText("<html><font size=6><b>" + ranks[i] + "</b></font></html>");
-			}else{
-				lblPlayerPosns[index].setText("<html><font size=6>" + ranks[i] + "</font></html>");
-			}
-		}
 		if (lastRound && (curPlayerTurn + 1) % 4 == challengingPlayer){  // If the last player's last round is finished
 			WonGame(playerNames.GetValueAt(playerScores.GetIndexOf(sortedPlayerScores.GetValueAt(0))), sortedPlayerScores.GetValueAt(0));
 		}else if (!lastRound){
@@ -609,7 +608,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		}
 		SetDiceButtons(btnEnabled);
 		if (!btnEnabled[0] && !btnEnabled[1] && !btnEnabled[2] && !btnEnabled[3] && !btnEnabled[4]){
-			JOptionPane.showMessageDialog(this, "There are no points to keep!", "No Points on Roll", JOptionPane.INFORMATION_MESSAGE);
+			//JOptionPane.showMessageDialog(this, "There are no points to keep!", "No Points on Roll", JOptionPane.INFORMATION_MESSAGE);
 			newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
 			tempScore = 0;
 			curTurnScore = 0;
@@ -704,5 +703,20 @@ public class MainWindow extends JFrame implements ActionListener{
 		}else{
 			return 100 * res2;
 		}
+	}
+	
+	public static void OpenWebsite(URI uri) {
+	    Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+	    if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+	        try {
+	            desktop.browse(uri);
+	        }catch (Exception e) {e.printStackTrace();}
+	    }
+	}
+
+	public static void OpenWebsite(URL url) {
+	    try {
+	        OpenWebsite(url.toURI());
+	    }catch (URISyntaxException e) {e.printStackTrace();}
 	}
 }

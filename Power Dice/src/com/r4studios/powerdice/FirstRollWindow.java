@@ -48,19 +48,24 @@ public class FirstRollWindow extends JDialog implements ActionListener{
 		rollPnl = new JPanel();
 		rollPnl.setLayout(new GridLayout(1,players.getSize(),5,0));
 		rollPnl.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+		JPanel[] indLblPnls = new JPanel[players.getSize()];
 		for (int i = 0; i < players.getSize(); i++){
 			indRollPnl[i] = new JPanel();
 			indRollPnl[i].setLayout(new BorderLayout());
 			iconPnl[i] = new JPanel();
 			rollLbls[i] = new JLabel();
 			iconPnl[i].add(rollLbls[i], JLabel.CENTER);
+			indLblPnls[i] = new JPanel();
 			plrRollsLbls[i] = new JLabel("<html><font size=4>" + plrs.GetValueAt(i) + "'s Roll:</font></html>");
+			indLblPnls[i].add(plrRollsLbls[i], JLabel.CENTER);
 			indRollPnl[i].add(iconPnl[i]);
-			indRollPnl[i].add(plrRollsLbls[i], BorderLayout.SOUTH);
+			indRollPnl[i].add(indLblPnls[i], BorderLayout.SOUTH);
 			rollPnl.add(indRollPnl[i]);
 		}
 		
+		JPanel winnerPnl = new JPanel();
 		winnerLbl = new JLabel();
+		winnerPnl.add(winnerLbl);
 		rollBtn = new JButton("Roll");
 		rollBtn.addActionListener(this);
 		startBtn = new JButton("Start Game");
@@ -69,7 +74,7 @@ public class FirstRollWindow extends JDialog implements ActionListener{
 		btnPnl = new JPanel();
 		btnPnl.setLayout(new GridLayout(1,3,5,0));
 		btnPnl.add(rollBtn);
-		btnPnl.add(winnerLbl);
+		btnPnl.add(winnerPnl);
 		btnPnl.add(startBtn);
 		
 		pnlMain = new JPanel();

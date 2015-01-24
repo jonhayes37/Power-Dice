@@ -13,7 +13,7 @@ Power Dice features a new set of dice that add a number of exciting mechanics to
 turn, players rolls the Power Die and begin their Power Round, where they use the set of dice that they rolled on the 
 Power Die to score bonus points.  The two stages to a turn are explained below
 
-![](http://i.imgur.com/3c3RUkD.png)
+![](http://i.imgur.com/LgHOaGq.png)
 
 ## The Standard Round
 

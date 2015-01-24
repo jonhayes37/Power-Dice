@@ -80,7 +80,7 @@ public class MainWindow extends JFrame implements ActionListener{
 	private JMenuItem helpItem;
 	private JMenuItem hallOfFameItem;
 	private JMenuItem aboutItem;
-	private static final int WINNING_SCORE = 2000;
+	private static final int WINNING_SCORE = 20000;
 	private static final String VERSION_NUMBER = "0.9.1";
 	private static final ImageIcon winIcon = new ImageIcon("Resources/icon.png");
 	private static final String[] powerDice = {"Skull Dice", "Chance Die", "All or Nothing Die", "+/- Dice", "Tripler Dice"};

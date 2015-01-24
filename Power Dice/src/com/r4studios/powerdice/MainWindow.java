@@ -6,6 +6,11 @@ import java.awt.Desktop;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -26,7 +31,7 @@ import javax.swing.border.TitledBorder;
 
 import com.r4studios.DataStructures.List;
 import com.r4studios.powerdice.Dice;
-// TODO Add high score / hall of fame
+
 public class MainWindow extends JFrame implements ActionListener{
 
 	private static final long serialVersionUID = -4703822372966597157L;
@@ -75,6 +80,7 @@ public class MainWindow extends JFrame implements ActionListener{
 	private JMenuItem helpItem;
 	private JMenuItem hallOfFameItem;
 	private JMenuItem aboutItem;
+	private static final int WINNING_SCORE = 2000;
 	private static final String VERSION_NUMBER = "0.9.1";
 	private static final ImageIcon winIcon = new ImageIcon("Resources/icon.png");
 	private static final String[] powerDice = {"Skull Dice", "Chance Die", "All or Nothing Die", "+/- Dice", "Tripler Dice"};
@@ -97,7 +103,8 @@ public class MainWindow extends JFrame implements ActionListener{
 	private boolean newRoll = false;
 	private boolean rollAgain = false;
 	private boolean lastRound = false;
-	
+	private HighScoreTable highScores = new HighScoreTable();
+	// TODO Valid dice that aren't kept when banking don't get disabled for next turn 
 	public MainWindow(List<String> players){
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -144,6 +151,13 @@ public class MainWindow extends JFrame implements ActionListener{
 		powerDie = new Dice(6, "power_dice");
 		greenDie = new Dice(20, "all"); 
 		this.playerNames = players;
+		try{  // Loads high scores
+			FileInputStream fileIn = new FileInputStream("Resources/high_scores.scr");
+			ObjectInputStream in = new ObjectInputStream(fileIn);
+			highScores = (HighScoreTable) in.readObject();
+			in.close();
+			fileIn.close();
+		}catch(IOException | ClassNotFoundException e) {e.printStackTrace();}
 		
 		// ----- UI Elements ----- //
 		
@@ -457,6 +471,8 @@ public class MainWindow extends JFrame implements ActionListener{
 					OpenWebsite(new URI("https://github.com/jonhayes37/Power-Dice/blob/master/README.md"));
 				}catch (URISyntaxException e1) {e1.printStackTrace();}
 			}
+		}else if (e.getSource() == hallOfFameItem){
+			new HallOfFameWindow(highScores);
 		}
 	}
 	
@@ -464,13 +480,13 @@ public class MainWindow extends JFrame implements ActionListener{
 		playerScores.SetValueAt(curPlayerTurn, playerScores.GetValueAt(curPlayerTurn) + curTurnScore);
 		lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "</font></html>");
 		sortedPlayerScores = playerScores.QuickSort().Reverse();
-		if (lastRound && (curPlayerTurn + 1) % 4 == challengingPlayer){  // If the last player's last round is finished
+		if (lastRound && (curPlayerTurn + 1) % playerNames.getSize() == challengingPlayer){  // If the last player's last round is finished
 			WonGame(playerNames.GetValueAt(playerScores.GetIndexOf(sortedPlayerScores.GetValueAt(0))), sortedPlayerScores.GetValueAt(0));
 		}else if (!lastRound){
-			if (playerScores.GetValueAt(curPlayerTurn) >= 20000){
+			if (playerScores.GetValueAt(curPlayerTurn) >= WINNING_SCORE){
 				challengingPlayer = curPlayerTurn;
 				lastRound = true;
-				JOptionPane.showMessageDialog(this, playerNames.GetValueAt(curPlayerTurn) + " has reached 20,000 points! The final round has begun!", "Final Round Starting!", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(this, playerNames.GetValueAt(curPlayerTurn) + " has reached " + WINNING_SCORE + " points! The final round has begun!", "Final Round Starting!", JOptionPane.INFORMATION_MESSAGE);
 			}
 		}
 		curTurnScore = 0;
@@ -495,12 +511,27 @@ public class MainWindow extends JFrame implements ActionListener{
 	}
 	
 	private void WonGame(String name, int score){
+		Score newScore = new Score(name, score);
+		String extraText = "";
+		if (highScores.AddScore(newScore)){
+			extraText = ", and earned a spot in the Hall of Fame";
+			FileOutputStream fileOut;  // Saving the new high scores
+			try {
+				fileOut = new FileOutputStream("Resources/high_scores.scr");
+				ObjectOutputStream out = new ObjectOutputStream(fileOut);
+				out.writeObject(highScores);
+				out.close();
+				fileOut.close();
+			} catch (IOException e) {e.printStackTrace();}
+			
+		}
+		
 		Object[] options = {"Yes, with the same players", "Yes, but with different players", "No"};
 		int n;
 		if (score == -1){
-			n = JOptionPane.showOptionDialog(this, name + " won the game by rolling a 20 on the All or Nothing die! Would you like to play again?", name + " won!", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+			n = JOptionPane.showOptionDialog(this, name + " won the game by rolling a 20 on the All or Nothing die" + extraText + "! Would you like to play again?", name + " won!", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 		}else{
-			n = JOptionPane.showOptionDialog(this, name + " won the game with a score of " + score + "!  Would you like to play again?", name + " won!", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+			n = JOptionPane.showOptionDialog(this, name + " won the game with a score of " + score + extraText + "!  Would you like to play again?", name + " won!", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 		}
 		if (n == JOptionPane.YES_OPTION){
 			this.dispose();

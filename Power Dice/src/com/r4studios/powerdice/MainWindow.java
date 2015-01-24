@@ -321,7 +321,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		this.pack();
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setIconImage(winIcon.getImage());
-		this.setSize(700,750);
+		this.setSize(710,750);
 		this.setTitle("Power Dice v" + VERSION_NUMBER);
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);

@@ -81,7 +81,7 @@ public class MainWindow extends JFrame implements ActionListener{
 	private JMenuItem hallOfFameItem;
 	private JMenuItem aboutItem;
 	private static final int WINNING_SCORE = 20000;
-	private static final String VERSION_NUMBER = "0.9.1";
+	private static final String VERSION_NUMBER = "0.9.3";
 	private static final ImageIcon winIcon = new ImageIcon("Resources/icon.png");
 	private static final String[] powerDice = {"Skull Dice", "Chance Die", "All or Nothing Die", "+/- Dice", "Tripler Dice"};
 	private Dice[] keptDice = new Dice[5];
@@ -99,12 +99,15 @@ public class MainWindow extends JFrame implements ActionListener{
 	private int curPlayerTurn;
 	private int curTurnScore = 0;
 	private int tempScore = 0;
+	private int rollOffScore = 0;
 	private int challengingPlayer;
 	private boolean newRoll = false;
 	private boolean rollAgain = false;
 	private boolean lastRound = false;
+	private boolean canRollOff = false;
+	private boolean newTurn = false;
 	private HighScoreTable highScores = new HighScoreTable();
-	// TODO Valid dice that aren't kept when banking don't get disabled for next turn 
+	
 	public MainWindow(List<String> players){
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -376,6 +379,9 @@ public class MainWindow extends JFrame implements ActionListener{
 				if (tempScore > 0){
 					btnBank.setEnabled(true);
 				}
+				if (regularDice[0] == null && regularDice[1] == null && regularDice[2] == null && regularDice[3] == null && regularDice[4] == null){
+					btnBank.setEnabled(false);
+				}
 				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
 				CheckReRoll();
 				break;
@@ -404,6 +410,23 @@ public class MainWindow extends JFrame implements ActionListener{
 		}
 		
 		if (e.getSource() == btnRollDice){
+			if (newRoll || rollAgain || newTurn){
+				for (int i = 0; i < 5; i++){
+					if (i < 3){
+						lblCurPowerDice[i].setIcon(new ImageIcon("Resources/blank.png"));
+					}
+					regularDice[i] = new Dice(6);
+					btnKeepDie[i].setEnabled(false);
+					keptDice[i] = null;
+					tempDice[i] = null;
+					lblKeptDice[i].setIcon(null);
+					lblCurDice[i].setIcon(new ImageIcon("Resources/blank.png"));
+				}
+			}
+			canRollOff = false;
+			newTurn = false;
+			btnBank.setText("Bank");
+			btnBank.setEnabled(false);
 			btnRollDice.setEnabled(false);
 			curTurnScore += tempScore;
 			tempScore = 0;
@@ -425,17 +448,45 @@ public class MainWindow extends JFrame implements ActionListener{
 				}
 			}
 			CheckForPoints();  // Enables buttons which can be used
-			newRoll = false;			
+			newRoll = false;
+			rollAgain = false;
 		}else if (e.getSource() == btnBank){
-			curTurnScore += tempScore;
-			tempScore = 0;
-			for (int i = 0; i < 5; i++){
-				btnReturnDie[i].setEnabled(false);
+			if (canRollOff){
+				curTurnScore = rollOffScore;
+				btnRollDice.setEnabled(false);
+				for (int i = 0; i < 5; i++){  // Loop to roll remaining dice
+					tempDice[i] = null;
+					if (keptDice[i] != null){
+						btnReturnDie[i].setEnabled(false);
+					}
+					if (regularDice[i] != null){
+						int roll = regularDice[i].Roll();
+						lblCurDice[i].setIcon(new ImageIcon(regularDice[i].sidePics[roll - 1]));
+					}else if (newRoll){
+						regularDice[i] = keptDice[i];
+						keptDice[i] = null;
+						lblKeptDice[i].setIcon(null);
+						regularDice[i].Roll();
+						lblCurDice[i].setIcon(new ImageIcon(regularDice[i].GetResultImage(regularDice[i].getLastRoll() - 1)));
+						btnReturnDie[i].setEnabled(false);
+					}
+				}
+				CheckForPoints();  // Enables buttons which can be used
+				newRoll = false;			
+				canRollOff = false;
+				btnBank.setText("Bank");
+				btnBank.setEnabled(false);
+			}else{
+				curTurnScore += tempScore;
+				tempScore = 0;
+				for (int i = 0; i < 5; i++){
+					btnReturnDie[i].setEnabled(false);
+				}
+				lblCurPowerDice[1].setIcon(new ImageIcon("Resources/power_die.png"));
+				btnRollPowerDice.setEnabled(true);
+				btnBank.setEnabled(false);
+				btnRollDice.setEnabled(false);
 			}
-			lblCurPowerDice[1].setIcon(new ImageIcon("Resources/power_die.png"));
-			btnRollPowerDice.setEnabled(true);
-			btnBank.setEnabled(false);
-			btnRollDice.setEnabled(false);
 		}else if (e.getSource() == btnRollPowerDice){
 			btnRollPowerDice.setEnabled(false);
 			int result = powerDie.Roll();
@@ -480,7 +531,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		playerScores.SetValueAt(curPlayerTurn, playerScores.GetValueAt(curPlayerTurn) + curTurnScore);
 		lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "</font></html>");
 		sortedPlayerScores = playerScores.QuickSort().Reverse();
-		if (lastRound && (curPlayerTurn + 1) % playerNames.getSize() == challengingPlayer){  // If the last player's last round is finished
+		if (lastRound && (curPlayerTurn + 1) % playerNames.getSize() == challengingPlayer && !rollAgain){  // If the last player's last round is finished
 			WonGame(playerNames.GetValueAt(playerScores.GetIndexOf(sortedPlayerScores.GetValueAt(0))), sortedPlayerScores.GetValueAt(0));
 		}else if (!lastRound){
 			if (playerScores.GetValueAt(curPlayerTurn) >= WINNING_SCORE){
@@ -489,25 +540,29 @@ public class MainWindow extends JFrame implements ActionListener{
 				JOptionPane.showMessageDialog(this, playerNames.GetValueAt(curPlayerTurn) + " has reached " + WINNING_SCORE + " points! The final round has begun!", "Final Round Starting!", JOptionPane.INFORMATION_MESSAGE);
 			}
 		}
+		rollOffScore = curTurnScore;
 		curTurnScore = 0;
 		tempScore = 0;
 		if (rollAgain == false){  // Changes players if no roll again from yellow
+			newTurn = true;
+			if (rollOffScore > 0){
+				btnBank.setText("Roll off of " + playerNames.GetValueAt(curPlayerTurn) + " (" + rollOffScore + " points)");
+				canRollOff = true;
+				btnBank.setEnabled(true);
+			}else{
+				canRollOff = false;
+				btnBank.setEnabled(false);
+			}
 			curPlayerTurn = (curPlayerTurn + 1) % playerNames.getSize();
-			newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
 		}
-		for (int i = 0; i < 5; i++){
+		newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
+		for (int i = 0; i < 3; i++){
 			if (i < 3){
 				lblCurPowerDice[i].setIcon(new ImageIcon("Resources/blank.png"));
 			}
-			regularDice[i] = new Dice(6);
-			keptDice[i] = null;
-			tempDice[i] = null;
-			lblKeptDice[i].setIcon(null);
-			lblCurDice[i].setIcon(new ImageIcon("Resources/blank.png"));
-			btnRollDice.setEnabled(true);
-			btnEndTurn.setEnabled(false);
 		}
-		rollAgain = false;
+		btnRollDice.setEnabled(true);
+		btnEndTurn.setEnabled(false);
 	}
 	
 	private void WonGame(String name, int score){
@@ -662,7 +717,7 @@ public class MainWindow extends JFrame implements ActionListener{
 	
 	// Returns change in pts or1 event code (-1,-2,-3)
 	private void RollYellow(){
-		int result = yellowDie.Roll();
+		int result = 6;//yellowDie.Roll();
 		lblCurPowerDice[1].setIcon(new ImageIcon(yellowDie.GetResultImage(result - 1)));
 		if (result == 1){
 			curTurnScore += 500;

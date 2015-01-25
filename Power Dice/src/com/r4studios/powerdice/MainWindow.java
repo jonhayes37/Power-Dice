@@ -31,7 +31,7 @@ import javax.swing.border.TitledBorder;
 
 import com.r4studios.DataStructures.List;
 import com.r4studios.powerdice.Dice;
-
+// TODO auto-updater?
 public class MainWindow extends JFrame implements ActionListener{
 
 	private static final long serialVersionUID = -4703822372966597157L;
@@ -717,7 +717,7 @@ public class MainWindow extends JFrame implements ActionListener{
 	
 	// Returns change in pts or1 event code (-1,-2,-3)
 	private void RollYellow(){
-		int result = 6;//yellowDie.Roll();
+		int result = yellowDie.Roll();
 		lblCurPowerDice[1].setIcon(new ImageIcon(yellowDie.GetResultImage(result - 1)));
 		if (result == 1){
 			curTurnScore += 500;

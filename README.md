@@ -1,13 +1,10 @@
-# Power Dice v0.9.3
+# Power Dice v0.9.4
 
-#### What's new in 0.9.3:
-- Players can now roll off of the previous player, provided their turn
-score is above 0!
-- Fixed an issue where getting a roll again on the final round was not
-properly granting an extra turn
-- Fixed an issue where unkept dice buttons were remaining enabled after
-a turn
-- Fixed an issue where you could bank with all 5 dice kept
+#### What's new in 0.9.4:
+- Players can now challenge each other to a series - the first player to 1, 2, 3, or 4 wins is the victor!
+- A messaging system now alerts players to major events pertaining to power dice rolls, and informs the player if they're having an amazing turn!
+- Major UI overhaul - Players can now keep and return dice by simply clicking on the dice - no more extra buttons! This also applies to rolling the Power Die and various Power Dice
+- Fixed an issue where the second roll-off would reset to 5 dice
 
 Power Dice is a fun and exciting variant on the traditional dice game [Dice 10000](http://en.wikipedia.org/wiki/Dice_10000), and is meant for 2-4 players.  Players in Power Dice race 
 to **20,000 Points**. Once a player eclipses the 20,000-point mark, each other player has one final chance to push their point 
@@ -17,7 +14,7 @@ Power Dice features a new set of dice that add a number of exciting mechanics to
 turn, players rolls the Power Die and begin their Power Round, where they use the set of dice that they rolled on the 
 Power Die to score bonus points.  The two stages to a turn are explained below
 
-![](http://i.imgur.com/LgHOaGq.png)
+![](http://i.imgur.com/3Jodguh.png)
 
 ## The Standard Round
 

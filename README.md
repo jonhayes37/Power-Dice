@@ -8,7 +8,7 @@
 
 Power Dice is a fun and exciting variant on the traditional dice game [Dice 10000](http://en.wikipedia.org/wiki/Dice_10000), and is meant for 2-4 players.  Players in Power Dice race 
 to **20,000 Points**. Once a player eclipses the 20,000-point mark, each other player has one final chance to push their point 
-total higher than their opponents.  After the final round, **the player with the most points wins**.
+total higher than their opponents' totals.  After the final round, **the player with the most points wins**.
 
 Power Dice features a new set of dice that add a number of exciting mechanics to a player's turn.  After 'banking' rolled points on their 
 turn, players rolls the Power Die and begin their Power Round, where they use the set of dice that they rolled on the 

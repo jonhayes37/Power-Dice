@@ -3,9 +3,12 @@ package com.r4studios.powerdice;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -31,8 +34,8 @@ import javax.swing.border.TitledBorder;
 
 import com.r4studios.DataStructures.List;
 import com.r4studios.powerdice.Dice;
-// TODO auto-updater?
-public class MainWindow extends JFrame implements ActionListener{
+
+public class MainWindow extends JFrame implements ActionListener, MouseListener{
 
 	private static final long serialVersionUID = -4703822372966597157L;
 	private JPanel pnlMain;
@@ -54,6 +57,8 @@ public class MainWindow extends JFrame implements ActionListener{
 	private JPanel pnlRoll;
 	private JPanel newsLblPnl;
 	private JPanel pnlCentre;
+	private JPanel pnlPowerMessage;
+	private JPanel pnlTurnMessage;
 	private JPanel[] pnlPowerDiceInd = new JPanel[3];  // Sub panels for the skulls, the +/-, and the double / triple dice
 	private JPanel[] pnlPowerIcons = new JPanel[7];
 	private JPanel[] pnlKeepIcons = new JPanel[5];
@@ -63,12 +68,10 @@ public class MainWindow extends JFrame implements ActionListener{
 	private JLabel[] lblKeptDice = new JLabel[5];
 	private JLabel[] lblCurDice = new JLabel[5];
 	private JLabel[] lblCurPowerDice = new JLabel[3];
+	private JLabel lblPowerMessage;
+	private JLabel lblTurnMessage;
 	private static JLabel[] lblPowerDice = new JLabel[7];    // Holds all pictures of power dice for right side (last 3 are from last index)
 	private JLabel newsLabel;
-	private JButton[] btnReturnDie = new JButton[5];
-	private JButton[] btnKeepDie = new JButton[5];
-	private JButton[] btnPickPowerDie = new JButton[5];
-	private JButton btnRollPowerDice;
 	private JButton btnRollDice;
 	private JButton btnBank;
 	private JButton btnEndTurn;
@@ -81,9 +84,8 @@ public class MainWindow extends JFrame implements ActionListener{
 	private JMenuItem hallOfFameItem;
 	private JMenuItem aboutItem;
 	private static final int WINNING_SCORE = 20000;
-	private static final String VERSION_NUMBER = "0.9.3";
+	private static final String VERSION_NUMBER = "0.9.4";
 	private static final ImageIcon winIcon = new ImageIcon("Resources/icon.png");
-	private static final String[] powerDice = {"Skull Dice", "Chance Die", "All or Nothing Die", "+/- Dice", "Tripler Dice"};
 	private Dice[] keptDice = new Dice[5];
 	private Dice[] tempDice = new Dice[5];
 	private Dice[] regularDice = new Dice[5];
@@ -101,14 +103,22 @@ public class MainWindow extends JFrame implements ActionListener{
 	private int tempScore = 0;
 	private int rollOffScore = 0;
 	private int challengingPlayer;
+	private int gamesNeededToWin;
+	private int curGame;
+	private List<Integer> plrWins = new List<Integer>();
+	private boolean[] canKeep = {false, false, false, false, false};
+	private boolean[] canReturn = {false, false, false, false, false};
+	private boolean[] canRollPower = {false, false, false, false, false, false, false};
+	private boolean canRollPowerDie = false;
 	private boolean newRoll = false;
 	private boolean rollAgain = false;
 	private boolean lastRound = false;
 	private boolean canRollOff = false;
+	private boolean firstRollOff = false;
 	private boolean newTurn = false;
 	private HighScoreTable highScores = new HighScoreTable();
 	
-	public MainWindow(List<String> players){
+	public MainWindow(List<String> players, int gamesToWin, int gameNum, List<Integer> wins){
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e1){e1.printStackTrace();}
@@ -154,6 +164,9 @@ public class MainWindow extends JFrame implements ActionListener{
 		powerDie = new Dice(6, "power_dice");
 		greenDie = new Dice(20, "all"); 
 		this.playerNames = players;
+		this.gamesNeededToWin = gamesToWin;
+		this.curGame = gameNum;
+		this.plrWins = wins;
 		try{  // Loads high scores
 			FileInputStream fileIn = new FileInputStream("Resources/high_scores.scr");
 			ObjectInputStream in = new ObjectInputStream(fileIn);
@@ -168,13 +181,14 @@ public class MainWindow extends JFrame implements ActionListener{
 			pnlPowerIcons[i] = new JPanel();
 			lblPowerDice[i] = new JLabel();
 			lblPowerDice[i].setIcon(new ImageIcon("Resources/power_" + i + ".png"));
+			lblPowerDice[i].addMouseListener(this);
 			pnlPowerIcons[i].add(lblPowerDice[i], JLabel.CENTER);
 		}
 		
 		// Score Area
 		pnlScoreArea = new JPanel();
 		pnlScoreArea.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-		pnlScoreArea.setLayout(new GridLayout(1,4,100,0));// - 5 * playerNames.getSize(),0));
+		pnlScoreArea.setLayout(new GridLayout(1,4,100,0));
 		for (int i = 0; i < 4; i++){
 			pnlPlayers[i] = new JPanel();
 			pnlPlayers[i].setLayout(new GridLayout(2,1,0,0));
@@ -182,7 +196,11 @@ public class MainWindow extends JFrame implements ActionListener{
 			pnlPlrNames[i].setLayout(new BorderLayout());
 			if (i < this.playerNames.getSize()){
 				playerScores.Push(0);
-				lblPlayerScores[i] = new JLabel("<html><font size=4>Score: 0</font></html>");
+				if (gamesNeededToWin > 1){
+					lblPlayerScores[i] = new JLabel("<html><font size=4>Score: 0<br>" + plrWins.GetValueAt(i) + " Win(s)</font></html>");
+				}else{
+					lblPlayerScores[i] = new JLabel("<html><font size=4>Score: 0</font></html>");
+				}
 				lblPlayerNames[i] = new JLabel("<html><font size=6>" + this.playerNames.GetValueAt(i) + "</font></html>");
 			}else{
 				lblPlayerScores[i] = new JLabel();
@@ -202,15 +220,10 @@ public class MainWindow extends JFrame implements ActionListener{
 		pnlKeepDice.setBorder(leftTitle);
 		for (int i = 0; i < 5; i++){
 			pnlKeepDie[i] = new JPanel();
-			pnlKeepDie[i].setLayout(new BorderLayout());
 			lblKeptDice[i] = new JLabel();
 			lblKeptDice[i].setIcon(new ImageIcon("Resources/blank.png"));
-			pnlKeepIcons[i].add(lblKeptDice[i]);
-			btnReturnDie[i] = new JButton("Return Die");
-			btnReturnDie[i].setEnabled(false);
-			btnReturnDie[i].addActionListener(this);
-			pnlKeepDie[i].add(pnlKeepIcons[i]);
-			pnlKeepDie[i].add(btnReturnDie[i], BorderLayout.SOUTH);
+			lblKeptDice[i].addMouseListener(this);
+			pnlKeepDie[i].add(lblKeptDice[i]);
 			pnlKeepDice.add(pnlKeepDie[i]);
 		}
 		
@@ -222,7 +235,6 @@ public class MainWindow extends JFrame implements ActionListener{
 		pnlPowerDice.setBorder(rightTitle);
 		for (int i = 0; i < 5; i++){
 			pnlPowerDie[i] = new JPanel();
-			pnlPowerDie[i].setLayout(new BorderLayout());
 		}
 		pnlPowerDiceInd[0] = new JPanel();
 		pnlPowerDiceInd[0].setLayout(new GridLayout(1,2,5,0));
@@ -238,24 +250,22 @@ public class MainWindow extends JFrame implements ActionListener{
 		pnlPowerDie[3].add(pnlPowerDiceInd[1]);
 		pnlPowerDie[4].add(pnlPowerIcons[6]);
 		for (int i = 0; i < 5; i++){
-			btnPickPowerDie[i] = new JButton("Roll " + powerDice[i]);
-			btnPickPowerDie[i].setEnabled(false);
-			btnPickPowerDie[i].addActionListener(this);
-			pnlPowerDie[i].add(btnPickPowerDie[i], BorderLayout.SOUTH);
 			pnlPowerDice.add(pnlPowerDie[i]);
 		}
 		
 		// Power Dice Roll Panel
 		pnlPowerRoll = new JPanel();
 		pnlPowerRoll.setLayout(new BorderLayout());
-		pnlPowerRoll.setBorder(BorderFactory.createEmptyBorder(70,0,0,0));
+		pnlPowerRoll.setBorder(BorderFactory.createEmptyBorder(50,0,0,0));
 		pnlRollPower = new JPanel();
+		pnlRollPower.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
 		pnlRollPower.setLayout(new GridLayout(1,5,5,0));
 		lblCurPowerDice[0] = new JLabel();
 		lblCurPowerDice[1] = new JLabel();
 		lblCurPowerDice[2] = new JLabel();
 		lblCurPowerDice[0].setIcon(new ImageIcon("Resources/blank.png"));
 		lblCurPowerDice[1].setIcon(new ImageIcon("Resources/blank.png"));
+		lblCurPowerDice[1].addMouseListener(this);
 		lblCurPowerDice[2].setIcon(new ImageIcon("Resources/blank.png"));
 		pnlRollPower.add(new JLabel());
 		for (int i = 0; i < 3; i++){
@@ -265,16 +275,20 @@ public class MainWindow extends JFrame implements ActionListener{
 		}
 		pnlRollPower.add(new JLabel());
 		pnlRollPowerBtn = new JPanel();
-		pnlRollPowerBtn.setLayout(new GridLayout(1,2,10,0));
-		btnRollPowerDice = new JButton("Roll Power Dice");
+		pnlRollPowerBtn.setBorder(BorderFactory.createEmptyBorder(40, 75, 0, 75));
+		pnlRollPowerBtn.setLayout(new GridLayout(1,1,0,0));
 		btnEndTurn = new JButton("End Turn");
 		btnEndTurn.addActionListener(this);
 		btnEndTurn.setEnabled(false);
-		btnRollPowerDice.addActionListener(this);
-		btnRollPowerDice.setEnabled(false);
-		pnlRollPowerBtn.add(btnRollPowerDice);
 		pnlRollPowerBtn.add(btnEndTurn);
-		pnlPowerRoll.add(new JPanel(), BorderLayout.NORTH);
+		
+		pnlPowerMessage = new JPanel();
+		pnlPowerMessage.setMinimumSize(new Dimension(300,35));
+		pnlPowerMessage.setMaximumSize(new Dimension(300,35));
+		pnlPowerMessage.setPreferredSize(new Dimension(300,35));
+		lblPowerMessage = new JLabel("<html><font size=4>     </font></html>");
+		pnlPowerMessage.add(lblPowerMessage, JLabel.CENTER);
+		pnlPowerRoll.add(pnlPowerMessage, BorderLayout.NORTH);
 		pnlPowerRoll.add(pnlRollPower, BorderLayout.CENTER);
 		pnlPowerRoll.add(pnlRollPowerBtn, BorderLayout.SOUTH);
 		
@@ -285,19 +299,17 @@ public class MainWindow extends JFrame implements ActionListener{
 		pnlMainArea = new JPanel();
 		pnlMainArea.setLayout(new BorderLayout());
 		pnlMainRoll = new JPanel();
+		pnlMainRoll.setBorder(BorderFactory.createEmptyBorder(25, 0, 0, 0));
 		pnlMainRoll.setLayout(new GridLayout(1,5,5,0));
 		for (int i = 0; i < 5; i ++){
 			pnlRollDie[i] = new JPanel();
-			pnlRollDie[i].setLayout(new BorderLayout());
 			lblCurDice[i] = new JLabel();
 			lblCurDice[i].setIcon(new ImageIcon("Resources/blank.png"));
-			btnKeepDie[i] = new JButton("Keep");
-			btnKeepDie[i].addActionListener(this);
-			btnKeepDie[i].setEnabled(false);
+			lblCurDice[i].addMouseListener(this);
 			pnlRollDie[i].add(lblCurDice[i]);
-			pnlRollDie[i].add(btnKeepDie[i], BorderLayout.SOUTH);
 			pnlMainRoll.add(pnlRollDie[i]);
 		}
+		
 		pnlMainRollBtn = new JPanel();
 		pnlMainRollBtn.setLayout(new GridLayout(1,2,10,0));
 		pnlMainRollBtn.setBorder(BorderFactory.createEmptyBorder(5,0,0,0));
@@ -308,6 +320,14 @@ public class MainWindow extends JFrame implements ActionListener{
 		btnBank.setEnabled(false);
 		pnlMainRollBtn.add(btnRollDice);
 		pnlMainRollBtn.add(btnBank);
+		
+		pnlTurnMessage = new JPanel();
+		pnlTurnMessage.setMinimumSize(new Dimension(300,35));
+		pnlTurnMessage.setPreferredSize(new Dimension(300,35));
+		pnlTurnMessage.setMaximumSize(new Dimension(300,35));
+		lblTurnMessage = new JLabel("<html><font size=4>     </font></html>");
+		pnlTurnMessage.add(lblTurnMessage, JLabel.CENTER);
+		pnlMainArea.add(pnlTurnMessage, BorderLayout.NORTH);
 		pnlMainArea.add(pnlMainRoll);
 		pnlMainArea.add(pnlMainRollBtn, BorderLayout.SOUTH);
 		
@@ -338,77 +358,18 @@ public class MainWindow extends JFrame implements ActionListener{
 		this.pack();
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setIconImage(winIcon.getImage());
-		this.setSize(710,760);
+		this.setSize(710,730);
 		this.setTitle("Power Dice v" + VERSION_NUMBER);
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
 		
 		FirstRollWindow rollWin = new FirstRollWindow(this.playerNames);
 		curPlayerTurn = rollWin.winner;
-		newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
+		newsLabel.setText("<html><div style=\"text-align: center;\"><font size=6><b>Game " + curGame + " - " + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
 	}
 	
 	// Event Handling
 	public void actionPerformed(ActionEvent e) {
-		for (int i = 0; i < 5; i++){
-			if (e.getSource() == btnReturnDie[i]){
-				regularDice[i] = keptDice[i];
-				keptDice[i] = null;
-				tempDice[i] = null;
-				lblKeptDice[i].setIcon(new ImageIcon("Resources/blank.png"));
-				lblCurDice[i].setIcon(new ImageIcon(regularDice[i].GetResultImage(regularDice[i].getLastRoll() - 1)));
-				btnReturnDie[i].setEnabled(false);
-				btnKeepDie[i].setEnabled(true);
-				tempScore = CalcTempPoints();
-				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
-				if (btnReturnDie[0].isEnabled() == false && btnReturnDie[1].isEnabled() == false && btnReturnDie[2].isEnabled() == false && btnReturnDie[3].isEnabled() == false && btnReturnDie[4].isEnabled() == false){
-					btnRollDice.setEnabled(false);
-					btnBank.setEnabled(false);
-				}
-				break;
-			}else if (e.getSource() == btnKeepDie[i]){
-				btnRollDice.setEnabled(true);
-				keptDice[i] = regularDice[i];
-				tempDice[i] = keptDice[i];
-				regularDice[i] = null;
-				lblCurDice[i].setIcon(new ImageIcon("Resources/blank.png"));
-				lblKeptDice[i].setIcon(new ImageIcon(keptDice[i].GetResultImage(keptDice[i].getLastRoll() - 1)));
-				btnKeepDie[i].setEnabled(false);
-				btnReturnDie[i].setEnabled(true);
-				tempScore = CalcTempPoints();
-				if (tempScore > 0){
-					btnBank.setEnabled(true);
-				}
-				if (regularDice[0] == null && regularDice[1] == null && regularDice[2] == null && regularDice[3] == null && regularDice[4] == null){
-					btnBank.setEnabled(false);
-				}
-				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
-				CheckReRoll();
-				break;
-			}else if (e.getSource() == btnPickPowerDie[i]){
-				for (int j = 0; j < 5; j++){
-					btnPickPowerDie[j].setEnabled(false);
-				}
-				lblCurPowerDice[0].setIcon(new ImageIcon("Resources/blank.png"));
-				lblCurPowerDice[1].setIcon(new ImageIcon("Resources/blank.png"));
-				lblCurPowerDice[2].setIcon(new ImageIcon("Resources/blank.png"));
-				if (i == 0){
-					curTurnScore += RollSkull();
-				}else if (i == 1){ 
-					RollYellow();
-				}else if (i == 2){
-					RollAll();
-				}else if (i == 3){
-					curTurnScore += RollPlusMinus();
-				}else if (i == 4){
-					curTurnScore *= RollTripler();
-				}
-				newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
-				btnEndTurn.setEnabled(true);
-				break;
-			}
-		}
-		
 		if (e.getSource() == btnRollDice){
 			if (newRoll || rollAgain || newTurn){
 				for (int i = 0; i < 5; i++){
@@ -416,14 +377,13 @@ public class MainWindow extends JFrame implements ActionListener{
 						lblCurPowerDice[i].setIcon(new ImageIcon("Resources/blank.png"));
 					}
 					regularDice[i] = new Dice(6);
-					btnKeepDie[i].setEnabled(false);
+					canKeep[i] = false;
 					keptDice[i] = null;
 					tempDice[i] = null;
-					lblKeptDice[i].setIcon(null);
+					lblKeptDice[i].setIcon(new ImageIcon("Resources/blank.png"));
 					lblCurDice[i].setIcon(new ImageIcon("Resources/blank.png"));
 				}
 			}
-			canRollOff = false;
 			newTurn = false;
 			btnBank.setText("Bank");
 			btnBank.setEnabled(false);
@@ -433,7 +393,7 @@ public class MainWindow extends JFrame implements ActionListener{
 			for (int i = 0; i < 5; i++){  // Loop to roll remaining dice
 				tempDice[i] = null;
 				if (keptDice[i] != null){
-					btnReturnDie[i].setEnabled(false);
+					canReturn[i] = false;
 				}
 				if (regularDice[i] != null){
 					int roll = regularDice[i].Roll();
@@ -444,20 +404,22 @@ public class MainWindow extends JFrame implements ActionListener{
 					lblKeptDice[i].setIcon(null);
 					regularDice[i].Roll();
 					lblCurDice[i].setIcon(new ImageIcon(regularDice[i].GetResultImage(regularDice[i].getLastRoll() - 1)));
-					btnReturnDie[i].setEnabled(false);
+					canReturn[i] = false;
 				}
 			}
 			CheckForPoints();  // Enables buttons which can be used
 			newRoll = false;
 			rollAgain = false;
+			firstRollOff = false;
 		}else if (e.getSource() == btnBank){
-			if (canRollOff){
+			if (canRollOff && firstRollOff){
 				curTurnScore = rollOffScore;
+				newsLabel.setText("<html><div style=\"text-align: center;\"><font size=6><b>Game " + curGame + " - " + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
 				btnRollDice.setEnabled(false);
 				for (int i = 0; i < 5; i++){  // Loop to roll remaining dice
 					tempDice[i] = null;
 					if (keptDice[i] != null){
-						btnReturnDie[i].setEnabled(false);
+						canReturn[i] = false;
 					}
 					if (regularDice[i] != null){
 						int roll = regularDice[i].Roll();
@@ -468,52 +430,36 @@ public class MainWindow extends JFrame implements ActionListener{
 						lblKeptDice[i].setIcon(null);
 						regularDice[i].Roll();
 						lblCurDice[i].setIcon(new ImageIcon(regularDice[i].GetResultImage(regularDice[i].getLastRoll() - 1)));
-						btnReturnDie[i].setEnabled(false);
+						canReturn[i] = false;
 					}
 				}
 				CheckForPoints();  // Enables buttons which can be used
 				newRoll = false;			
-				canRollOff = false;
 				btnBank.setText("Bank");
 				btnBank.setEnabled(false);
+				firstRollOff = false;
+				newTurn = false;
 			}else{
 				curTurnScore += tempScore;
 				tempScore = 0;
 				for (int i = 0; i < 5; i++){
-					btnReturnDie[i].setEnabled(false);
+					canReturn[i] = false;
 				}
 				lblCurPowerDice[1].setIcon(new ImageIcon("Resources/power_die.png"));
-				btnRollPowerDice.setEnabled(true);
+				canRollPowerDie = true;
 				btnBank.setEnabled(false);
 				btnRollDice.setEnabled(false);
-			}
-		}else if (e.getSource() == btnRollPowerDice){
-			btnRollPowerDice.setEnabled(false);
-			int result = powerDie.Roll();
-			lblCurPowerDice[1].setIcon(new ImageIcon(powerDie.GetResultImage(result - 1)));
-			if (result == 1){
-				btnPickPowerDie[0].setEnabled(true);
-			}else if (result == 2){
-				btnPickPowerDie[1].setEnabled(true);
-			}else if (result == 3){
-				btnPickPowerDie[2].setEnabled(true);
-			}else if (result == 4){
-				btnPickPowerDie[3].setEnabled(true);
-			}else if (result == 5){
-				btnPickPowerDie[4].setEnabled(true);
-			}else if (result == 6){
-				for (int i = 0; i < 5; i++){
-					btnPickPowerDie[i].setEnabled(true);
-				}
+				canRollOff = false;
 			}
 		}else if (e.getSource() == btnEndTurn){
+			lblTurnMessage.setText("<html><div style=\"text-align: center;\"><font size=4>     </font></html>");
 			EndPlayerTurn();
 		}else if (e.getSource() == quitItem){
 			this.dispose();
 		}else if (e.getSource() == aboutItem){
 			new AboutWindow(VERSION_NUMBER);
 		}else if (e.getSource() == newGameItem){
-			new EnterPlayersWindow();
+			new EnterPlayersWindow(null);
 			this.dispose();
 		}else if (e.getSource() == helpItem){
 			int n = JOptionPane.showConfirmDialog(this, "This will open the Power Dice ReadMe file in your default browser.  Do you wish to proceed?", "Opening in Default Browser", JOptionPane.YES_NO_OPTION);
@@ -525,11 +471,116 @@ public class MainWindow extends JFrame implements ActionListener{
 		}else if (e.getSource() == hallOfFameItem){
 			new HallOfFameWindow(highScores);
 		}
+		System.out.println("-----------------");
+		System.out.println("Can roll off: " + canRollOff);
+		System.out.println("newRoll: " + newRoll);
+		System.out.println("rollAgain: " + rollAgain);
+		System.out.println("newTurn: " + newTurn);
+	}
+	
+	// Mouse events for keeping and returning dice
+	public void mouseClicked(MouseEvent e) {
+		for (int i = 0; i < 5; i++){
+			if (e.getSource() == lblCurDice[i] && canKeep[i]){
+				btnRollDice.setEnabled(true);
+				keptDice[i] = regularDice[i];
+				tempDice[i] = keptDice[i];
+				regularDice[i] = null;
+				lblCurDice[i].setIcon(new ImageIcon("Resources/blank.png"));
+				lblKeptDice[i].setIcon(new ImageIcon(keptDice[i].GetResultImage(keptDice[i].getLastRoll() - 1)));
+				canKeep[i] = false;
+				canReturn[i] = true;
+				tempScore = CalcTempPoints();
+				if (tempScore > 0){
+					btnBank.setEnabled(true);
+				}
+				if (regularDice[0] == null && regularDice[1] == null && regularDice[2] == null && regularDice[3] == null && regularDice[4] == null){
+					btnBank.setEnabled(false);
+					canRollOff = false;
+				}
+				lblTurnMessage.setText(TurnMessage(tempScore + curTurnScore));
+				newsLabel.setText("<html><div style=\"text-align: center;\"><font size=6><b>Game " + curGame + " - " + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
+				CheckReRoll();
+				break;
+			}else if (e.getSource() == lblKeptDice[i] && canReturn[i]){
+				regularDice[i] = keptDice[i];
+				keptDice[i] = null;
+				tempDice[i] = null;
+				lblKeptDice[i].setIcon(new ImageIcon("Resources/blank.png"));
+				lblCurDice[i].setIcon(new ImageIcon(regularDice[i].GetResultImage(regularDice[i].getLastRoll() - 1)));
+				canReturn[i] = false;
+				canKeep[i] = true;
+				tempScore = CalcTempPoints();
+				lblTurnMessage.setText(TurnMessage(tempScore + curTurnScore));
+				newsLabel.setText("<html><div style=\"text-align: center;\"><font size=6><b>Game " + curGame + " - " + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
+				if (!canReturn[0] && !canReturn[1] && !canReturn[2] && !canReturn[3] && !canReturn[4]){
+					btnRollDice.setEnabled(false);
+					btnBank.setEnabled(false);
+				}
+				break;
+			}
+		}
+		for (int i = 0; i < 7; i++){
+			if (e.getSource() == lblPowerDice[i] && canRollPower[i]){
+				for (int j = 0; j < 7; j++){
+					canRollPower[j] = false;
+				}
+				lblCurPowerDice[0].setIcon(new ImageIcon("Resources/blank.png"));
+				lblCurPowerDice[1].setIcon(new ImageIcon("Resources/blank.png"));
+				lblCurPowerDice[2].setIcon(new ImageIcon("Resources/blank.png"));
+				if (i == 0 || i == 1){
+					curTurnScore += RollSkull();
+				}else if (i == 2){ 
+					RollYellow();
+				}else if (i == 3){
+					RollAll();
+				}else if (i == 4 || i == 5){
+					curTurnScore += RollPlusMinus();
+				}else if (i == 6){
+					curTurnScore *= RollTripler();
+				}
+				lblTurnMessage.setText(TurnMessage(curTurnScore));
+				newsLabel.setText("<html><div style=\"text-align: center;\"><font size=6><b>Game " + curGame + " - " + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: " + (tempScore + curTurnScore) + "</font></html>");
+				btnEndTurn.setEnabled(true);
+				break;
+			}
+		}
+		if (e.getSource() == lblCurPowerDice[1] && canRollPowerDie){
+			canRollPowerDie = false;
+			int result = powerDie.Roll();
+			lblCurPowerDice[1].setIcon(new ImageIcon(powerDie.GetResultImage(result - 1)));
+			if (result == 1){
+				canRollPower[0] = true;
+				canRollPower[1] = true;
+			}else if (result == 2){
+				canRollPower[2] = true;
+			}else if (result == 3){
+				canRollPower[3] = true;
+			}else if (result == 4){
+				canRollPower[4] = true;
+				canRollPower[5] = true;
+			}else if (result == 5){
+				canRollPower[6] = true;
+			}else{
+				for (int j = 0; j < 7; j++){
+					canRollPower[j] = true;
+				}
+			}
+		}
+		/*System.out.println("-----------------");
+		System.out.println("Can roll off: " + canRollOff);
+		System.out.println("newRoll: " + newRoll);
+		System.out.println("rollAgain: " + rollAgain);
+		System.out.println("newTurn: " + newTurn);*/
 	}
 	
 	private void EndPlayerTurn(){
 		playerScores.SetValueAt(curPlayerTurn, playerScores.GetValueAt(curPlayerTurn) + curTurnScore);
-		lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "</font></html>");
+		if (gamesNeededToWin > 1){
+			lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "<br>" + plrWins.GetValueAt(curPlayerTurn) + " Win(s)</font></html>");
+		}else{
+			lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "</font></html>");
+		}
 		sortedPlayerScores = playerScores.QuickSort().Reverse();
 		if (lastRound && (curPlayerTurn + 1) % playerNames.getSize() == challengingPlayer && !rollAgain){  // If the last player's last round is finished
 			WonGame(playerNames.GetValueAt(playerScores.GetIndexOf(sortedPlayerScores.GetValueAt(0))), sortedPlayerScores.GetValueAt(0));
@@ -548,6 +599,7 @@ public class MainWindow extends JFrame implements ActionListener{
 			if (rollOffScore > 0){
 				btnBank.setText("Roll off of " + playerNames.GetValueAt(curPlayerTurn) + " (" + rollOffScore + " points)");
 				canRollOff = true;
+				firstRollOff = true;
 				btnBank.setEnabled(true);
 			}else{
 				canRollOff = false;
@@ -555,11 +607,10 @@ public class MainWindow extends JFrame implements ActionListener{
 			}
 			curPlayerTurn = (curPlayerTurn + 1) % playerNames.getSize();
 		}
-		newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
+		lblPowerMessage.setText("<html><font size=4>     </font></html>");
+		newsLabel.setText("<html><div style=\"text-align: center;\"><font size=6><b>Game " + curGame + " - " + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
 		for (int i = 0; i < 3; i++){
-			if (i < 3){
-				lblCurPowerDice[i].setIcon(new ImageIcon("Resources/blank.png"));
-			}
+			lblCurPowerDice[i].setIcon(new ImageIcon("Resources/blank.png"));
 		}
 		btnRollDice.setEnabled(true);
 		btnEndTurn.setEnabled(false);
@@ -580,22 +631,41 @@ public class MainWindow extends JFrame implements ActionListener{
 			} catch (IOException e) {e.printStackTrace();}
 			
 		}
-		
-		Object[] options = {"Yes, with the same players", "Yes, but with different players", "No"};
-		int n;
-		if (score == -1){
-			n = JOptionPane.showOptionDialog(this, name + " won the game by rolling a 20 on the All or Nothing die" + extraText + "! Would you like to play again?", name + " won!", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+
+		plrWins.SetValueAt(playerNames.GetIndexOf(name), plrWins.GetValueAt(playerNames.GetIndexOf(name)) + 1);  // Adds the win
+		if (plrWins.GetValueAt(playerNames.GetIndexOf(name)) == gamesNeededToWin){ // If the player won the series
+			Object[] options = {"Yes, with the same players", "Yes, but with different players", "No"};
+			int n;
+			if (gamesNeededToWin > 1){
+				if (score == -1){
+					n = JOptionPane.showOptionDialog(this, name + " won the Series by rolling a 20 on the All or Nothing die" + extraText + "! Would you like to play again?", name + " won!", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+				}else{
+					n = JOptionPane.showOptionDialog(this, name + " won the Series with a score of " + score + extraText + "! Would you like to play again?", name + " won!", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+				}
+			}else{
+				if (score == -1){
+					n = JOptionPane.showOptionDialog(this, name + " won the game by rolling a 20 on the All or Nothing die" + extraText + "! Would you like to play again?", name + " won!", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+				}else{
+					n = JOptionPane.showOptionDialog(this, name + " won the game with a score of " + score + extraText + "! Would you like to play again?", name + " won!", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+				}
+			}
+			if (n == JOptionPane.YES_OPTION){
+				this.dispose();
+				new EnterPlayersWindow(playerNames);
+			}else if (n == JOptionPane.NO_OPTION){
+				this.dispose();
+				new EnterPlayersWindow(null);
+			}else{
+				this.dispose();
+			}
 		}else{
-			n = JOptionPane.showOptionDialog(this, name + " won the game with a score of " + score + extraText + "!  Would you like to play again?", name + " won!", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-		}
-		if (n == JOptionPane.YES_OPTION){
+			if (score == -1){
+				JOptionPane.showMessageDialog(this, name + " won Game " + curGame + " by rolling a 20 on the All or Nothing die" + extraText + "! Are you ready to start Game " + (curGame + 1) + "?", name + " won!", JOptionPane.INFORMATION_MESSAGE);
+			}else{
+				JOptionPane.showMessageDialog(this, name + " won Game " + curGame + " with a score of " + score + extraText + "! Are you ready to start Game " + (curGame + 1) + "?", name + " won!", JOptionPane.INFORMATION_MESSAGE);
+			}
 			this.dispose();
-			new MainWindow(playerNames);
-		}else if (n == JOptionPane.NO_OPTION){
-			this.dispose();
-			new EnterPlayersWindow();
-		}else{
-			this.dispose();
+			new MainWindow(playerNames, gamesNeededToWin, curGame + 1, plrWins);
 		}
 	}
 	
@@ -699,8 +769,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		}
 		SetDiceButtons(btnEnabled);
 		if (!btnEnabled[0] && !btnEnabled[1] && !btnEnabled[2] && !btnEnabled[3] && !btnEnabled[4]){
-			//JOptionPane.showMessageDialog(this, "There are no points to keep!", "No Points on Roll", JOptionPane.INFORMATION_MESSAGE);
-			newsLabel.setText("<html><font size=6><b>" + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
+			newsLabel.setText("<html><div style=\"text-align: center;\"><font size=6><b>Game " + curGame + " - " + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
 			tempScore = 0;
 			curTurnScore = 0;
 			btnRollDice.setEnabled(false);
@@ -711,14 +780,14 @@ public class MainWindow extends JFrame implements ActionListener{
 	
 	private void SetDiceButtons(boolean[] enabled){
 		for (int i = 0; i < 5; i++){
-			btnKeepDie[i].setEnabled(enabled[i]);
+			canKeep[i] = enabled[i];
 		}
 	}
 	
-	// Returns change in pts or1 event code (-1,-2,-3)
 	private void RollYellow(){
 		int result = yellowDie.Roll();
 		lblCurPowerDice[1].setIcon(new ImageIcon(yellowDie.GetResultImage(result - 1)));
+		lblPowerMessage.setText(PowerMessage("yellow", result));
 		if (result == 1){
 			curTurnScore += 500;
 		}else if (result == 2){
@@ -732,13 +801,19 @@ public class MainWindow extends JFrame implements ActionListener{
 			int tempPts = playerScores.GetValueAt(tradeWin.choice);
 			playerScores.SetValueAt(tradeWin.choice, playerScores.GetValueAt(curPlayerTurn));
 			playerScores.SetValueAt(curPlayerTurn, tempPts);
-			lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "</font></html>");
-			lblPlayerScores[tradeWin.choice].setText("<html><font size=4>Score: " + playerScores.GetValueAt(tradeWin.choice) + "</font></html>");
+			if (gamesNeededToWin > 1){
+				lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "<br>" + plrWins.GetValueAt(curPlayerTurn) + " Win(s)</font></html>");
+				lblPlayerScores[tradeWin.choice].setText("<html><font size=4>Score: " + playerScores.GetValueAt(tradeWin.choice) + "<br>" + plrWins.GetValueAt(tradeWin.choice) + " Win(s)</font></html>");
+			}else{
+				lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "</font></html>");
+				lblPlayerScores[tradeWin.choice].setText("<html><font size=4>Score: " + playerScores.GetValueAt(tradeWin.choice) + "</font></html>");
+			}
 			curTurnScore = 0;
 			tempScore = 0;
 		}else{ // Roll again
 			rollAgain = true;
 		}
+		
 	}
 	
 	// Returns the change in points
@@ -748,6 +823,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		lblCurPowerDice[0].setIcon(new ImageIcon(skullDice[0].GetResultImage(res1 - 1)));
 		lblCurPowerDice[2].setIcon(new ImageIcon(skullDice[0].GetResultImage(res2 - 1)));
 		if (res1 == 1 && res2 == 1){
+			lblPowerMessage.setText(PowerMessage("skull", -1000));
 			return -1000;
 		}else if (res1 == 1){
 			return -100 * res2;
@@ -761,6 +837,7 @@ public class MainWindow extends JFrame implements ActionListener{
 	private void RollAll(){
 		int result = greenDie.Roll();
 		lblCurPowerDice[1].setIcon(new ImageIcon(greenDie.GetResultImage(result - 1)));
+		lblPowerMessage.setText(PowerMessage("all", result));
 		if (result == 1){  // Lost all points
 			curTurnScore = 0;
 			tempScore = 0;
@@ -782,6 +859,7 @@ public class MainWindow extends JFrame implements ActionListener{
 		freqs.SetValueAt(res1 - 1, freqs.GetValueAt(res1 - 1) + 1);
 		freqs.SetValueAt(res2 - 1, freqs.GetValueAt(res2 - 1) + 1);
 		freqs.SetValueAt(res3 - 1, freqs.GetValueAt(res3 - 1) + 1);
+		lblPowerMessage.setText(PowerMessage("tripler", freqs.FindMaxValue()));
 		return freqs.FindMaxValue();
 	}
 	
@@ -798,6 +876,61 @@ public class MainWindow extends JFrame implements ActionListener{
 		}
 	}
 	
+	private String TurnMessage(int score){
+		if (score > WINNING_SCORE){
+			return "<html><div style=\"text-align: center;\"><font size=5>ONE TURN WIN!</font></html>";
+		}else if (score >= 8000){
+			return "<html><div style=\"text-align: center;\"><font size=5>Legendary!</font></html>";
+		}else if (score >= 4000){
+			return "<html><div style=\"text-align: center;\"><font size=5>Unbelievable!</font></html>";
+		}else if (score >= 2000){
+			return "<html><div style=\"text-align: center;\"><font size=5>Amazing!</font></html>";
+		}else if (score >= 1000){
+			return "<html><div style=\"text-align: center;\"><font size=5>Great!</font></html>";
+		}else if (score >= 500){
+			return "<html><div style=\"text-align: center;\"><font size=5>Nice!</font></html>";
+		}else{
+			return "";
+		}
+	}
+	
+	private String PowerMessage(String id, int result){
+		if (id == "yellow"){
+			switch (result){
+				case 2:
+					return "<html><div style=\"text-align: center;\"><font size=5>High Roller!</font></html>";
+				case 3:
+					return "<html><div style=\"text-align: center;\"><font size=5>Better Luck Next Time!</font></html>";
+				case 4:
+					return "<html><div style=\"text-align: center;\"><font size=5>Better Luck Next Time!</font></html>";
+				case 5:
+					return "<html><div style=\"text-align: center;\"><font size=5>Trade Points!</font></html>";
+				default:
+					return "";
+			}
+		}else if (id == "all"){
+			if (result == 20){
+				return "<html><div style=\"text-align: center;\"><font size=5>Winner!</font></html>";
+			}else if (result == 1){
+				return "<html><div style=\"text-align: center;\"><font size=5>Lost All Points!</font></html>";
+			}
+			return "";
+		}else if (id == "tripler"){  // Here result is the highest frequency
+			if (result == 2){
+				return "<html><div style=\"text-align: center;\"><font size=5>Doubles!</font></html>";
+			}else if (result == 3){
+				return "<html><div style=\"text-align: center;\"><font size=5>Triples!</font></html>";
+			}
+			return "";
+		}else if (id == "skull"){  // Here result is the score received
+			if (result == -1000){
+				return "<html><div style=\"text-align: center;\"><font size=4>Double Trouble!</font></html>";
+			}
+			return "";
+		}
+		return "";
+	}
+	
 	public static void OpenWebsite(URI uri) {
 	    Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
 	    if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
@@ -812,4 +945,9 @@ public class MainWindow extends JFrame implements ActionListener{
 	        OpenWebsite(url.toURI());
 	    }catch (URISyntaxException e) {e.printStackTrace();}
 	}
+	
+	public void mouseEntered(MouseEvent e) {}
+	public void mouseExited(MouseEvent e) {}
+	public void mousePressed(MouseEvent e) {}
+	public void mouseReleased(MouseEvent e) {}
 }

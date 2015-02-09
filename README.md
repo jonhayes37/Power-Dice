@@ -1,6 +1,7 @@
-# Power Dice v0.9.4
+# Power Dice v1.0
 
-#### What's new in 0.9.4:
+#### What's new in 1.0:
+- Players now have the ability to choose how many points are required for victory, between 5,000 and 20,000 points. Note that players can only enter the Hall of Fame with a score higher than 20,000!
 - Players can now challenge each other to a series - the first player to 1, 2, 3, or 4 wins is the victor!
 - A messaging system now alerts players to major events pertaining to power dice rolls, and informs the player if they're having an amazing turn!
 - Major UI overhaul - Players can now keep and return dice by simply clicking on the dice - no more extra buttons! This also applies to rolling the Power Die and various Power Dice

@@ -13,7 +13,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -24,6 +26,8 @@ public class EnterPlayersWindow extends JDialog implements ActionListener{
 	private List<String> players = new List<String>();
 	private JPanel pnlMain;
 	private JLabel[] lblPlayers = new JLabel[4];
+	private JLabel lblPoints;
+	private JSpinner spinPts;
 	private JRadioButton[] radBestOf = new JRadioButton[4];
 	private ButtonGroup rads = new ButtonGroup();
 	private JTextField[] txtPlayers = new JTextField[4];
@@ -38,7 +42,7 @@ public class EnterPlayersWindow extends JDialog implements ActionListener{
 		
 		pnlMain = new JPanel();
 		pnlMain.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-		pnlMain.setLayout(new GridLayout(7,2,0,5));
+		pnlMain.setLayout(new GridLayout(8,2,0,5));
 		for (int i = 0; i < 4; i++){
 			lblPlayers[i] = new JLabel("Player " + (i + 1) + "'s name:");
 			txtPlayers[i] = new JTextField(15);
@@ -57,19 +61,24 @@ public class EnterPlayersWindow extends JDialog implements ActionListener{
 				txtPlayers[i].setText(names.GetValueAt(i));
 			}
 		}
+		lblPoints = new JLabel("Points to Win:");
+		SpinnerNumberModel spinMdl = new SpinnerNumberModel(20000,5000,20000,500);
+		spinPts = new JSpinner(spinMdl);
 		btnOk = new JButton("Start Game!");
 		btnOk.addActionListener(this);
 		btnOk.setEnabled(false);
 		for (int i = 0; i < 4; i++){
 			pnlMain.add(radBestOf[i]);
 		}
+		pnlMain.add(lblPoints);
+		pnlMain.add(spinPts);
 		pnlMain.add(new JLabel());
 		pnlMain.add(btnOk);
 		
 		this.add(pnlMain);
 		this.pack();
 		this.setIconImage(winIcon.getImage());
-		this.setSize(250,250);
+		this.setSize(250,280);
 		this.setTitle("New Game");
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
@@ -91,7 +100,7 @@ public class EnterPlayersWindow extends JDialog implements ActionListener{
 				for (int i = 0; i < players.getSize(); i++){
 					wins.Push(0);
 				}
-				new MainWindow(this.players, numGames, 1, wins);
+				new MainWindow(this.players, numGames, 1, wins, (int)spinPts.getValue());
 				this.dispose();
 			}
 		}

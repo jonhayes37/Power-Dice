@@ -34,7 +34,7 @@ import javax.swing.border.TitledBorder;
 
 import com.r4studios.DataStructures.List;
 import com.r4studios.powerdice.Dice;
-
+// TODO Add option in first window to choose points to win
 public class MainWindow extends JFrame implements ActionListener, MouseListener{
 
 	private static final long serialVersionUID = -4703822372966597157L;
@@ -83,7 +83,7 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 	private JMenuItem helpItem;
 	private JMenuItem hallOfFameItem;
 	private JMenuItem aboutItem;
-	private static final int WINNING_SCORE = 20000;
+	private static int WINNING_SCORE;
 	private static final String VERSION_NUMBER = "0.9.4";
 	private static final ImageIcon winIcon = new ImageIcon("Resources/icon.png");
 	private Dice[] keptDice = new Dice[5];
@@ -116,9 +116,9 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 	private boolean canRollOff = false;
 	private boolean firstRollOff = false;
 	private boolean newTurn = false;
-	private HighScoreTable highScores = new HighScoreTable();
+	private HighScoreTable highScores;
 	
-	public MainWindow(List<String> players, int gamesToWin, int gameNum, List<Integer> wins){
+	public MainWindow(List<String> players, int gamesToWin, int gameNum, List<Integer> wins, int ptsToWin){
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e1){e1.printStackTrace();}
@@ -167,6 +167,8 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 		this.gamesNeededToWin = gamesToWin;
 		this.curGame = gameNum;
 		this.plrWins = wins;
+		MainWindow.WINNING_SCORE = ptsToWin;
+		this.highScores = new HighScoreTable();
 		try{  // Loads high scores
 			FileInputStream fileIn = new FileInputStream("Resources/high_scores.scr");
 			ObjectInputStream in = new ObjectInputStream(fileIn);
@@ -471,11 +473,6 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 		}else if (e.getSource() == hallOfFameItem){
 			new HallOfFameWindow(highScores);
 		}
-		System.out.println("-----------------");
-		System.out.println("Can roll off: " + canRollOff);
-		System.out.println("newRoll: " + newRoll);
-		System.out.println("rollAgain: " + rollAgain);
-		System.out.println("newTurn: " + newTurn);
 	}
 	
 	// Mouse events for keeping and returning dice
@@ -567,11 +564,6 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 				}
 			}
 		}
-		/*System.out.println("-----------------");
-		System.out.println("Can roll off: " + canRollOff);
-		System.out.println("newRoll: " + newRoll);
-		System.out.println("rollAgain: " + rollAgain);
-		System.out.println("newTurn: " + newTurn);*/
 	}
 	
 	private void EndPlayerTurn(){
@@ -665,7 +657,7 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 				JOptionPane.showMessageDialog(this, name + " won Game " + curGame + " with a score of " + score + extraText + "! Are you ready to start Game " + (curGame + 1) + "?", name + " won!", JOptionPane.INFORMATION_MESSAGE);
 			}
 			this.dispose();
-			new MainWindow(playerNames, gamesNeededToWin, curGame + 1, plrWins);
+			new MainWindow(playerNames, gamesNeededToWin, curGame + 1, plrWins, WINNING_SCORE);
 		}
 	}
 	

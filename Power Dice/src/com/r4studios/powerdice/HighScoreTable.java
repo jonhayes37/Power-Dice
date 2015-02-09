@@ -29,12 +29,12 @@ public class HighScoreTable implements Serializable{
 	
 	// Returns true if score added
 	public boolean AddScore(Score score){
-		if (scores.getSize() == 10 && score.compareTo(scores.GetValueAt(9)) > 0 && score.getScore() > 2000){ // Only keeps top 10 scores
+		if (scores.getSize() == 10 && score.compareTo(scores.GetValueAt(9)) > 0 && score.getScore() > 20000){ // Only keeps top 10 scores
 			scores.Pop();
 			scores.Push(score);
 			scores = scores.QuickSort().Reverse();
 			return true;
-		}else if (scores.getSize() < 10 && score.getScore() > 2000){
+		}else if (scores.getSize() < 10 && score.getScore() > 20000){
 			scores.Push(score);
 			scores = scores.QuickSort().Reverse();
 			return true;

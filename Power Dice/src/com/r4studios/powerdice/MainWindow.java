@@ -84,7 +84,7 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 	private JMenuItem hallOfFameItem;
 	private JMenuItem aboutItem;
 	private static int WINNING_SCORE;
-	private static final String VERSION_NUMBER = "0.9.4";
+	private static final String VERSION_NUMBER = "1.0";
 	private static final ImageIcon winIcon = new ImageIcon("Resources/icon.png");
 	private Dice[] keptDice = new Dice[5];
 	private Dice[] tempDice = new Dice[5];

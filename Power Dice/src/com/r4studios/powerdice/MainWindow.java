@@ -1,5 +1,6 @@
 package com.r4studios.powerdice;
-
+// TODO After bank, need to disable keep / return die labels
+// TODO Mouse click listener chagne to other listener
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;
@@ -34,7 +35,7 @@ import javax.swing.border.TitledBorder;
 
 import com.r4studios.DataStructures.List;
 import com.r4studios.powerdice.Dice;
-// TODO Add option in first window to choose points to win
+
 public class MainWindow extends JFrame implements ActionListener, MouseListener{
 
 	private static final long serialVersionUID = -4703822372966597157L;
@@ -446,6 +447,7 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 				tempScore = 0;
 				for (int i = 0; i < 5; i++){
 					canReturn[i] = false;
+					canKeep[i] = false;
 				}
 				lblCurPowerDice[1].setIcon(new ImageIcon("Resources/power_die.png"));
 				canRollPowerDie = true;
@@ -476,7 +478,7 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 	}
 	
 	// Mouse events for keeping and returning dice
-	public void mouseClicked(MouseEvent e) {
+	public void mousePressed(MouseEvent e) {
 		for (int i = 0; i < 5; i++){
 			if (e.getSource() == lblCurDice[i] && canKeep[i]){
 				btnRollDice.setEnabled(true);
@@ -822,7 +824,7 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 		}else if (res2 == 1){
 			return -100 * res1;
 		}else{
-			return 200 * (res1 + res2);
+			return 100 * (res1 + res2);
 		}
 	}
 	
@@ -940,6 +942,6 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 	
 	public void mouseEntered(MouseEvent e) {}
 	public void mouseExited(MouseEvent e) {}
-	public void mousePressed(MouseEvent e) {}
+	public void mouseClicked(MouseEvent e) {}
 	public void mouseReleased(MouseEvent e) {}
 }

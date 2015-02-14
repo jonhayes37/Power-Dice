@@ -57,7 +57,7 @@ public class TradePtsWindow extends JDialog implements ActionListener{
 		}
 		
 		this.add(pnlMain);
-		this.setSize(175 * numOthers, 125);
+		this.setSize(50 + 185 * numOthers, 150);
 		this.setModalityType(JDialog.ModalityType.APPLICATION_MODAL);
 		this.setLocationRelativeTo(null);
 		this.setIconImage(winIcon.getImage());

@@ -1,11 +1,10 @@
-# Power Dice v1.0
+# Power Dice v1.0.1
 
-#### What's new in 1.0:
-- Players now have the ability to choose how many points are required for victory, between 5,000 and 20,000 points. Note that players can only enter the Hall of Fame with a score higher than 20,000!
-- Players can now challenge each other to a series - the first player to 1, 2, 3, or 4 wins is the victor!
-- A messaging system now alerts players to major events pertaining to power dice rolls, and informs the player if they're having an amazing turn!
-- Major UI overhaul - Players can now keep and return dice by simply clicking on the dice - no more extra buttons! This also applies to rolling the Power Die and various Power Dice
-- Fixed an issue where the second roll-off would reset to 5 dice
+#### What's new in 1.0.1:
+- The Skull Dice now provide 100x the sum of the dice if no skulls are rolled, down from 200x
+- The Trade Points window size has been adjusted to improve its appearance
+- Improved mouse responsiveness when selecting dice
+- Fixed a bug where players could bank and then keep valid dice afterwards
 
 Power Dice is a fun and exciting variant on the traditional dice game [Dice 10000](http://en.wikipedia.org/wiki/Dice_10000), and is meant for 2-4 players.  Players in Power Dice race 
 to **20,000 Points**. Once a player eclipses the 20,000-point mark, each other player has one final chance to push their point 
@@ -63,7 +62,7 @@ The skull dice offer a player the potential for big bonuses to their turn score,
 by the player; each die has their '1' side replaced with a menacing skull.  
 * If a player rolls two skulls, they lose **1,000 points**
 * If a player rolls one skull, they lose points equal to **100x the other die's result**
-* If a player rolls no skulls, they gain **200x the sum of their roll**
+* If a player rolls no skulls, they gain **100x the sum of their roll**
 
 ### The Chance Die
 

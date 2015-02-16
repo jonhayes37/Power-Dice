@@ -30,14 +30,17 @@ public class FirstRollWindow extends JDialog implements ActionListener{
 	private int rolls = 0;
 	private List<Integer> results;
 	private List<String> plrs;
+	private String title;
+	public String winnerName;
 	private int playerSize;
 	public int winner = 0;
 	private Dice die = new Dice(20, "all");
 	private boolean tied = false;
 	private static final ImageIcon winIcon = new ImageIcon("Resources/icon.png");
 	
-	public FirstRollWindow(List<String> players){
+	public FirstRollWindow(List<String> players, String title){
 		this.plrs = players;
+		this.title = title;
 		this.playerSize = players.getSize();
 		rollLbls = new JLabel[playerSize];
 		plrRollsLbls = new JLabel[playerSize];
@@ -68,7 +71,7 @@ public class FirstRollWindow extends JDialog implements ActionListener{
 		winnerPnl.add(winnerLbl);
 		rollBtn = new JButton("Roll");
 		rollBtn.addActionListener(this);
-		startBtn = new JButton("Start Game");
+		startBtn = (title == "First Roll") ? new JButton("Start Game") : new JButton("End Game");
 		startBtn.addActionListener(this);
 		startBtn.setEnabled(false);
 		btnPnl = new JPanel();
@@ -88,7 +91,7 @@ public class FirstRollWindow extends JDialog implements ActionListener{
 		this.pack();
 		this.setIconImage(winIcon.getImage());
 		this.setSize(500,200);
-		this.setTitle("First Turn Roll");
+		this.setTitle(title + " Roll");
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
 	}
@@ -125,10 +128,11 @@ public class FirstRollWindow extends JDialog implements ActionListener{
 						tiePlrs.Push(plrs.GetValueAt(i));
 					}
 				}
-				this.winner = plrs.GetIndexOf(tiePlrs.GetValueAt(new FirstRollWindow(tiePlrs).winner));
+				this.winner = plrs.GetIndexOf(tiePlrs.GetValueAt(new FirstRollWindow(tiePlrs, this.title).winner));
 				this.dispose();
 			}else{
 				this.winner = results.FindMaxIndex();
+				this.winnerName = plrs.GetValueAt(winner);
 				this.dispose();
 			}
 		}

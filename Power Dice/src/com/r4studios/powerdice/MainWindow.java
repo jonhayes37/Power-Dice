@@ -1,6 +1,5 @@
 package com.r4studios.powerdice;
-// TODO After bank, need to disable keep / return die labels
-// TODO Mouse click listener chagne to other listener
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;
@@ -85,7 +84,7 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 	private JMenuItem hallOfFameItem;
 	private JMenuItem aboutItem;
 	private static int WINNING_SCORE;
-	private static final String VERSION_NUMBER = "1.0";
+	private static final String VERSION_NUMBER = "1.0.2";
 	private static final ImageIcon winIcon = new ImageIcon("Resources/icon.png");
 	private Dice[] keptDice = new Dice[5];
 	private Dice[] tempDice = new Dice[5];
@@ -107,6 +106,7 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 	private int gamesNeededToWin;
 	private int curGame;
 	private List<Integer> plrWins = new List<Integer>();
+	private boolean[] hasWinScore;
 	private boolean[] canKeep = {false, false, false, false, false};
 	private boolean[] canReturn = {false, false, false, false, false};
 	private boolean[] canRollPower = {false, false, false, false, false, false, false};
@@ -214,6 +214,8 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 			pnlPlayers[i].add(lblPlayerScores[i]);
 			pnlScoreArea.add(pnlPlayers[i]);
 		}
+		this.hasWinScore = new boolean[playerScores.getSize()];
+		System.out.println(playerScores.getSize());
 		
 		// Left Dice Panel
 		TitledBorder leftTitle = new TitledBorder(BorderFactory.createLineBorder(Color.BLACK), "Dice to Keep");
@@ -366,7 +368,7 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
 		
-		FirstRollWindow rollWin = new FirstRollWindow(this.playerNames);
+		FirstRollWindow rollWin = new FirstRollWindow(this.playerNames, "First Roll");
 		curPlayerTurn = rollWin.winner;
 		newsLabel.setText("<html><div style=\"text-align: center;\"><font size=6><b>Game " + curGame + " - " + playerNames.GetValueAt(curPlayerTurn) + "'s Turn</b></font><br><font size=5>Turn Score: 0</font></html>");
 	}
@@ -569,7 +571,7 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 	}
 	
 	private void EndPlayerTurn(){
-		playerScores.SetValueAt(curPlayerTurn, playerScores.GetValueAt(curPlayerTurn) + curTurnScore);
+		playerScores.SetValueAt(curPlayerTurn, 20000);//playerScores.GetValueAt(curPlayerTurn) + curTurnScore);
 		if (gamesNeededToWin > 1){
 			lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "<br>" + plrWins.GetValueAt(curPlayerTurn) + " Win(s)</font></html>");
 		}else{
@@ -577,7 +579,30 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 		}
 		sortedPlayerScores = playerScores.QuickSort().Reverse();
 		if (lastRound && (curPlayerTurn + 1) % playerNames.getSize() == challengingPlayer && !rollAgain){  // If the last player's last round is finished
-			WonGame(playerNames.GetValueAt(playerScores.GetIndexOf(sortedPlayerScores.GetValueAt(0))), sortedPlayerScores.GetValueAt(0));
+			int winScore = playerScores.FindMaxValue();
+			int numTied = 0;
+			for (int i = 0; i < playerScores.getSize(); i++){
+				if (playerScores.GetValueAt(i) == winScore){
+					hasWinScore[i] = true;
+					numTied++;
+				}
+			}
+			if (numTied > 1){
+				List<String> tiedNames = new List<String>();
+				for (int i = 0; i < playerNames.getSize(); i++){
+					if (hasWinScore[i]){
+						tiedNames.Push(playerNames.GetValueAt(i));
+					}
+				}
+				String text = TieText(numTied, tiedNames);
+				JOptionPane.showMessageDialog(this, text, "Tie!", JOptionPane.INFORMATION_MESSAGE);
+				FirstRollWindow finalWin = new FirstRollWindow(tiedNames, "Final Round");
+				String winnerNames = finalWin.winnerName;
+				WonGame(winnerNames, playerScores.GetValueAt(playerNames.GetIndexOf(winnerNames)));
+			}else{
+				WonGame(playerNames.GetValueAt(playerScores.GetIndexOf(sortedPlayerScores.GetValueAt(0))), sortedPlayerScores.GetValueAt(0));
+			}
+			
 		}else if (!lastRound){
 			if (playerScores.GetValueAt(curPlayerTurn) >= WINNING_SCORE){
 				challengingPlayer = curPlayerTurn;
@@ -661,6 +686,19 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 			this.dispose();
 			new MainWindow(playerNames, gamesNeededToWin, curGame + 1, plrWins, WINNING_SCORE);
 		}
+	}
+	
+	private String TieText(int tied, List<String> names){
+		String output = "There is a ";
+		if (tied == 2){
+			output += "2-way tie between " + names.GetValueAt(0) + " and " + names.GetValueAt(1) + "!";
+		}else if (tied == 3){
+			output += "3-way tie between " + names.GetValueAt(0) + ", " + names.GetValueAt(1) + ", and " + names.GetValueAt(2) + "!";
+		}else{
+			output += "4-way tie between " + names.GetValueAt(0) + ", " + names.GetValueAt(1) + ", " + names.GetValueAt(2) + ", and " + names.GetValueAt(3) + "!";
+		}
+		output += " Are you ready for the final round?";
+		return output;
 	}
 	
 	private void CheckReRoll(){

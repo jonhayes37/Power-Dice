@@ -1,10 +1,11 @@
-# Power Dice v1.0.1
+# Power Dice v1.0.2
 
-#### What's new in 1.0.1:
+#### What's new in 1.0.2:
 - The Skull Dice now provide 100x the sum of the dice if no skulls are rolled, down from 200x
 - The Trade Points window size has been adjusted to improve its appearance
 - Improved mouse responsiveness when selecting dice
 - Fixed a bug where players could bank and then keep valid dice afterwards
+- Implemented a tie-breaking procedure
 
 Power Dice is a fun and exciting variant on the traditional dice game [Dice 10000](http://en.wikipedia.org/wiki/Dice_10000), and is meant for 2-4 players.  Players in Power Dice race 
 to **20,000 Points**. Once a player eclipses the 20,000-point mark, each other player has one final chance to push their point 

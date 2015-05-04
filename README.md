@@ -106,8 +106,7 @@ to **lose all of their points**! All other rolls have no effect.
 ![](/Power Dice/Resources/plus_11.png)
 
 A true 50/50, the Plus-Minus Dice offers players a **high risk, high reward** option in their Power Round. Two dice are rolled; a
-6-sided die on which three sides are positive and three sides are negative, and a regular 12-sided die. The roll is then added or subtracted
-from the player's score total.
+6-sided die on which three sides are positive and three sides are negative, and a regular 12-sided die. The player then **gains or loses 100x the roll on the 12-sided die.**
 
 ### The Tripler Dice
 

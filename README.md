@@ -114,8 +114,6 @@ A true 50/50, the Plus-Minus Dice offers players a **high risk, high reward** op
 
 The safest bet among the power dice, the tripler can only improve a player's turn's score total.  The player rolls 3 red  6-sided dice, and if they roll doubles or triples, **their turn score is likewise doubled or tripled**.
 
-#### Minimum System Requirements
-* 1 MB Hard Drive Space
-* 128 MB RAM
-* Intel Core 2 Duo E4300 @ 1.80 GHz
-* Java Version 7 or later
+Any donations are always appreciated!
+
+[![PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=3N3QXHX6KJFKG)

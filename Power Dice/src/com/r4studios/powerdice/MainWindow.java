@@ -571,7 +571,7 @@ public class MainWindow extends JFrame implements ActionListener, MouseListener{
 	}
 	
 	private void EndPlayerTurn(){
-		playerScores.SetValueAt(curPlayerTurn, 20000);//playerScores.GetValueAt(curPlayerTurn) + curTurnScore);
+		playerScores.SetValueAt(curPlayerTurn, playerScores.GetValueAt(curPlayerTurn) + curTurnScore);
 		if (gamesNeededToWin > 1){
 			lblPlayerScores[curPlayerTurn].setText("<html><font size=4>Score: " + playerScores.GetValueAt(curPlayerTurn) + "<br>" + plrWins.GetValueAt(curPlayerTurn) + " Win(s)</font></html>");
 		}else{

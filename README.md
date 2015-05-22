@@ -1,10 +1,11 @@
-# Power Dice v1.0.1
+# Power Dice v1.0.2
 
-#### What's new in 1.0.1:
+#### What's new in 1.0.2:
 - The Skull Dice now provide 100x the sum of the dice if no skulls are rolled, down from 200x
 - The Trade Points window size has been adjusted to improve its appearance
 - Improved mouse responsiveness when selecting dice
 - Fixed a bug where players could bank and then keep valid dice afterwards
+- Implemented a tie-breaking procedure
 
 Power Dice is a fun and exciting variant on the traditional dice game [Dice 10000](http://en.wikipedia.org/wiki/Dice_10000), and is meant for 2-4 players.  Players in Power Dice race 
 to **20,000 Points**. Once a player eclipses the 20,000-point mark, each other player has one final chance to push their point 
@@ -105,8 +106,7 @@ to **lose all of their points**! All other rolls have no effect.
 ![](/Power Dice/Resources/plus_11.png)
 
 A true 50/50, the Plus-Minus Dice offers players a **high risk, high reward** option in their Power Round. Two dice are rolled; a
-6-sided die on which three sides are positive and three sides are negative, and a regular 12-sided die. The roll is then added or subtracted
-from the player's score total.
+6-sided die on which three sides are positive and three sides are negative, and a regular 12-sided die. The player then **gains or loses 100x the roll on the 12-sided die.**
 
 ### The Tripler Dice
 
@@ -114,8 +114,6 @@ from the player's score total.
 
 The safest bet among the power dice, the tripler can only improve a player's turn's score total.  The player rolls 3 red  6-sided dice, and if they roll doubles or triples, **their turn score is likewise doubled or tripled**.
 
-#### Minimum System Requirements
-* 1 MB Hard Drive Space
-* 128 MB RAM
-* Intel Core 2 Duo E4300 @ 1.80 GHz
-* Java Version 7 or later
+Any donations are always appreciated!
+
+[![PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=3N3QXHX6KJFKG)
